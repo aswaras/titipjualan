@@ -20,6 +20,16 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+<!-- PWA -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#000000">
+
+<!-- IOS Support -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="My App">
+
 <style>
 :root {
   --indigo: #6366f1; --indigo-dark: #4f46e5; --indigo-deep: #3730a3;
@@ -685,6 +695,8 @@ select.inp{cursor:pointer}
 .btn-export svg{width:12px;height:12px}
 .btn-export:hover{background:var(--emerald-mid)}
 </style>
+
+
 </head>
 <body>
 <div id="root"></div>
@@ -1006,7 +1018,7 @@ function PgBeranda({penitip,barang,penjualan,user,loading}){
 
       <div className="hero-card">
         <div className="hero-label">Performa Bisnis</div>
-        <div className="hero-title">Data real-time</div>
+        <!-- <div className="hero-title">Data real-time</div> -->
         <div className="hero-grid">
           <div className="hero-stat">
             <div className="hero-stat-l">Keuntungan</div>
@@ -1599,5 +1611,119 @@ self.addEventListener('fetch',e=>{
   });
 }
 </script>
+
+<!-- Install Popup -->
+<div id="installPopup" style="
+position:fixed;
+bottom:20px;
+left:50%;
+transform:translateX(-50%);
+background:#111;
+color:white;
+padding:14px 18px;
+border-radius:16px;
+box-shadow:0 10px 30px rgba(0,0,0,.3);
+display:none;
+z-index:9999;
+font-family:sans-serif;
+width:90%;
+max-width:350px;
+">
+
+<div style="font-size:15px;font-weight:bold;margin-bottom:6px;">
+Install Aplikasi
+</div>
+
+<div style="font-size:13px;opacity:.8;margin-bottom:12px;">
+Pasang aplikasi agar lebih cepat & bisa dibuka seperti app.
+</div>
+
+<div style="display:flex;gap:10px;">
+<button id="installBtn" style="
+flex:1;
+padding:10px;
+border:none;
+border-radius:10px;
+background:#ffffff;
+color:#000;
+font-weight:bold;
+cursor:pointer;
+">
+Install
+</button>
+
+<button id="closePopup" style="
+padding:10px 14px;
+border:none;
+border-radius:10px;
+background:#333;
+color:#fff;
+cursor:pointer;
+">
+Nanti
+</button>
+</div>
+
+</div>
+
+<script>
+let deferredPrompt;
+
+const installPopup = document.getElementById('installPopup');
+const installBtn = document.getElementById('installBtn');
+const closePopup = document.getElementById('closePopup');
+
+window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+
+    // tampil popup install
+    installPopup.style.display = 'block';
+});
+
+installBtn.addEventListener('click', async () => {
+    if (!deferredPrompt) return;
+
+    deferredPrompt.prompt();
+
+    const { outcome } = await deferredPrompt.userChoice;
+
+    console.log('Install result:', outcome);
+
+    deferredPrompt = null;
+    installPopup.style.display = 'none';
+});
+
+closePopup.addEventListener('click', () => {
+    installPopup.style.display = 'none';
+});
+
+// IOS detection
+const isIOS = /iphone|ipad|ipod/i.test(window.navigator.userAgent);
+
+if (isIOS) {
+    setTimeout(() => {
+        installPopup.style.display = 'block';
+
+        installPopup.innerHTML = `
+        <div style="font-size:15px;font-weight:bold;margin-bottom:8px;">
+        Install di iPhone
+        </div>
+
+        <div style="font-size:13px;opacity:.8;line-height:1.5;">
+        Tekan tombol <b>Share</b> lalu pilih
+        <b>Add to Home Screen</b>
+        </div>
+        `;
+    }, 3000);
+}
+</script>
+
+<script>
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./sw.js');
+}
+</script>
+
 </body>
 </html>
