@@ -19,6 +19,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 :root {
   --indigo: #6366f1; --indigo-dark: #4f46e5; --indigo-deep: #3730a3;
@@ -598,13 +599,91 @@ select.inp{cursor:pointer}
 .frow-3{display:grid;grid-template-columns:repeat(3,1fr);gap:.7rem}
 @media(max-width:500px){.frow{grid-template-columns:1fr}.frow-3{grid-template-columns:1fr 1fr}}
 
-/* ── Tip chip (desktop sidebar connection badge) */
-.conn-chip{
-  display:inline-flex;align-items:center;gap:5px;
-  background:var(--emerald-light);border:1px solid var(--emerald-mid);
-  color:var(--emerald);padding:.22rem .6rem;border-radius:999px;
-  font-size:.63rem;font-weight:700;margin-top:.5rem;
+/* ── Modal bottom-sheet ─────────────────────────── */
+.modal-overlay{
+  position:fixed;inset:0;z-index:200;
+  background:rgba(15,23,42,.45);
+  backdrop-filter:blur(4px);
+  animation:fadeIn .18s ease;
 }
+.modal-sheet{
+  position:fixed;bottom:0;left:0;right:0;z-index:201;
+  background:var(--white);
+  border-radius:22px 22px 0 0;
+  padding:0 1rem calc(1.25rem + var(--safe-bottom));
+  max-height:92dvh;overflow-y:auto;
+  animation:slideUp .28s cubic-bezier(.34,1.1,.64,1);
+  box-shadow:0 -8px 40px rgba(0,0,0,.15);
+}
+.modal-handle{
+  width:36px;height:4px;border-radius:999px;
+  background:var(--slate-200);
+  margin:12px auto 1rem;
+}
+.modal-head{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:1rem;
+}
+.modal-head h3{font-size:.95rem;font-weight:800;color:var(--slate-800)}
+.modal-close{
+  width:28px;height:28px;border-radius:50%;
+  background:var(--slate-100);color:var(--slate-500);
+  display:flex;align-items:center;justify-content:center;
+}
+.modal-close svg{width:13px;height:13px}
+
+/* ── Search & filter bar ────────────────────────── */
+.search-bar{
+  position:relative;margin-bottom:.75rem;
+}
+.search-bar svg{
+  position:absolute;left:.75rem;top:50%;transform:translateY(-50%);
+  width:14px;height:14px;color:var(--slate-400);pointer-events:none;
+}
+.search-input{
+  width:100%;padding:.55rem .75rem .55rem 2.2rem;
+  border:1.5px solid var(--slate-200);border-radius:var(--r-sm);
+  font-size:.82rem;color:var(--slate-800);background:var(--white);
+  transition:border-color .15s,box-shadow .15s;
+}
+.search-input:focus{
+  border-color:var(--indigo);
+  box-shadow:0 0 0 3px rgba(99,102,241,.1);
+  outline:none;
+}
+.filter-chips{
+  display:flex;gap:.4rem;overflow-x:auto;padding-bottom:.25rem;
+  margin-bottom:.75rem;scrollbar-width:none;
+}
+.filter-chips::-webkit-scrollbar{display:none}
+.chip{
+  flex-shrink:0;padding:.28rem .75rem;border-radius:999px;
+  font-size:.72rem;font-weight:700;border:1.5px solid var(--slate-200);
+  background:var(--white);color:var(--slate-500);transition:all .15s;
+  white-space:nowrap;
+}
+.chip.on{
+  background:var(--indigo-light);border-color:var(--indigo-mid);
+  color:var(--indigo);
+}
+
+/* ── List toolbar (search row + add btn) ────────── */
+.list-toolbar{
+  display:flex;align-items:center;gap:.5rem;margin-bottom:.75rem;
+}
+.list-toolbar .search-bar{flex:1;margin-bottom:0}
+
+/* ── Export btn ─────────────────────────────────── */
+.btn-export{
+  display:inline-flex;align-items:center;gap:5px;
+  padding:.32rem .65rem;border-radius:var(--r-xs);
+  font-size:.72rem;font-weight:700;
+  background:var(--emerald-light);color:var(--emerald);
+  border:1.5px solid var(--emerald-mid);transition:all .15s;
+  white-space:nowrap;
+}
+.btn-export svg{width:12px;height:12px}
+.btn-export:hover{background:var(--emerald-mid)}
 </style>
 </head>
 <body>
@@ -639,6 +718,8 @@ const IC = {
   Down:    ()=><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>,
   X:       ()=><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>,
   Download:()=><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>,
+  Search:  ()=><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>,
+  FileXls: ()=><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="15" x2="15" y2="15"/><line x1="9" y1="12" x2="15" y2="12"/></svg>,
 };
 
 const formatRp = n => new Intl.NumberFormat('id-ID',{style:'currency',currency:'IDR',maximumFractionDigits:0}).format(n||0);
@@ -1002,13 +1083,18 @@ function PgBeranda({penitip,barang,penjualan,user,loading}){
 function PgPenitip({penitip,barang,setPenitip,notif,loading}){
   const [form,setForm] = React.useState({nama:'',kontak:''});
   const [saving,setSaving] = React.useState(false);
+  const [modalOpen,setModalOpen] = React.useState(false);
+  const [search,setSearch] = React.useState('');
+
+  const openModal = ()=>{ setForm({nama:'',kontak:''}); setModalOpen(true); };
+  const closeModal = ()=>setModalOpen(false);
 
   const tambah = async()=>{
     if(!form.nama.trim()) return notif('Nama penitip wajib diisi','err');
     setSaving(true);
     try{
       const r = await api({action:'addPenitip',nama:form.nama.trim(),kontak:form.kontak.trim()});
-      if(r.success){ setPenitip(p=>[...p,r.data]); setForm({nama:'',kontak:''}); notif('Penitip ditambahkan!'); }
+      if(r.success){ setPenitip(p=>[...p,r.data]); closeModal(); notif('Penitip ditambahkan!'); }
       else notif(r.error,'err');
     } catch{ notif('Gagal terhubung','err'); }
     setSaving(false);
@@ -1024,53 +1110,109 @@ function PgPenitip({penitip,barang,setPenitip,notif,loading}){
     } catch{ notif('Gagal terhubung','err'); }
   };
 
+  const exportExcel = ()=>{
+    const rows = filtered.map(p=>({
+      Nama: p.nama,
+      Kontak: p.kontak||'-',
+      'Jumlah Barang': barang.filter(b=>b.idPenitip===p.id).length,
+    }));
+    const ws = XLSX.utils.json_to_sheet(rows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Penitip');
+    XLSX.writeFile(wb, `Penitip_TitipKu_${new Date().toLocaleDateString('id-ID').replace(/\//g,'-')}.xlsx`);
+  };
+
+  const filtered = penitip.filter(p=>
+    p.nama.toLowerCase().includes(search.toLowerCase()) ||
+    (p.kontak||'').toLowerCase().includes(search.toLowerCase())
+  );
+
   return (
     <div className="fade-up">
-      <div className="pg-head"><h2>👥 Penitip</h2><p>Kelola mitra penitip barang</p></div>
-
-      <div className="card" style={{marginBottom:'.9rem'}}>
-        <div className="card-title">Tambah Penitip Baru</div>
-        <div className="frow" style={{marginBottom:'.65rem'}}>
-          <div>
-            <label className="flabel">Nama *</label>
-            <input className="inp" placeholder="Nama penitip" value={form.nama} onChange={e=>setForm({...form,nama:e.target.value})}/>
-          </div>
-          <div>
-            <label className="flabel">No. HP / WA</label>
-            <input className="inp" placeholder="08xx…" value={form.kontak} onChange={e=>setForm({...form,kontak:e.target.value})} onKeyDown={e=>e.key==='Enter'&&tambah()}/>
-          </div>
-        </div>
-        <button className="btn btn-blue" onClick={tambah} disabled={saving}>
-          {saving?<><MiniSpin color="white"/>Menyimpan…</>:<><IC.Plus/>Tambah Penitip</>}
+      <div className="pg-head" style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start'}}>
+        <div><h2>👥 Penitip</h2><p>Kelola mitra penitip barang</p></div>
+        <button className="btn btn-blue btn-sm" onClick={openModal} style={{marginTop:2}}>
+          <IC.Plus/>Tambah
         </button>
       </div>
 
       <div className="card">
-        <div className="card-title" style={{justifyContent:'space-between'}}>
-          <span>Daftar Mitra ({penitip.length})</span>
-          {loading&&<div className="loading-row"><MiniSpin/></div>}
+        {/* Toolbar: search + export */}
+        <div className="list-toolbar">
+          <div className="search-bar" style={{flex:1,marginBottom:0}}>
+            <IC.Search/>
+            <input className="search-input" placeholder="Cari nama / kontak…"
+              value={search} onChange={e=>setSearch(e.target.value)}/>
+          </div>
+          <button className="btn-export" onClick={exportExcel} title="Export Excel">
+            <IC.FileXls/>Excel
+          </button>
         </div>
+
+        {/* Count */}
+        <div style={{fontSize:'.7rem',color:'var(--slate-400)',fontWeight:600,marginBottom:'.6rem'}}>
+          {filtered.length} dari {penitip.length} penitip
+        </div>
+
         {loading&&penitip.length===0 ? <SkeletonList/> :
-          penitip.length===0 ? <div className="empty"><div className="empty-icon">👥</div><p>Belum ada penitip</p><span>Tambah penitip pertama Anda</span></div>
-          : penitip.map(p=>(
-            <div key={p.id} className="list-row">
-              <div style={{display:'flex',alignItems:'center',gap:10}}>
-                <div style={{
-                  width:36,height:36,borderRadius:'50%',flexShrink:0,
-                  background:'linear-gradient(135deg,var(--indigo),var(--violet))',
-                  display:'flex',alignItems:'center',justifyContent:'center',
-                  color:'white',fontWeight:800,fontSize:'.8rem'
-                }}>{p.nama?.[0]?.toUpperCase()}</div>
-                <div>
-                  <div style={{fontWeight:600,fontSize:'.875rem'}}>{p.nama}</div>
-                  <div style={{fontSize:'.72rem',color:'var(--slate-400)',marginTop:2}}>{p.kontak||'Tidak ada kontak'}</div>
-                </div>
-              </div>
-              <button className="btn btn-icon btn-red" onClick={()=>hapus(p.id)}><IC.Trash/></button>
+          filtered.length===0 ? (
+            <div className="empty">
+              <div className="empty-icon">{search?'🔍':'👥'}</div>
+              <p>{search?'Tidak ditemukan':'Belum ada penitip'}</p>
+              <span>{search?`Coba kata kunci lain`:'Tap "+ Tambah" untuk mulai'}</span>
             </div>
-          ))
+          ) : filtered.map(p=>{
+            const jmlBarang = barang.filter(b=>b.idPenitip===p.id).length;
+            return (
+              <div key={p.id} className="list-row">
+                <div style={{display:'flex',alignItems:'center',gap:10}}>
+                  <div style={{
+                    width:36,height:36,borderRadius:'50%',flexShrink:0,
+                    background:'linear-gradient(135deg,var(--indigo),var(--violet))',
+                    display:'flex',alignItems:'center',justifyContent:'center',
+                    color:'white',fontWeight:800,fontSize:'.8rem'
+                  }}>{p.nama?.[0]?.toUpperCase()}</div>
+                  <div>
+                    <div style={{fontWeight:600,fontSize:'.875rem'}}>{p.nama}</div>
+                    <div style={{fontSize:'.72rem',color:'var(--slate-400)',marginTop:2}}>
+                      {p.kontak||'—'} · {jmlBarang} barang
+                    </div>
+                  </div>
+                </div>
+                <button className="btn btn-icon btn-red" onClick={()=>hapus(p.id)}><IC.Trash/></button>
+              </div>
+            );
+          })
         }
       </div>
+
+      {/* MODAL TAMBAH PENITIP */}
+      {modalOpen&&(
+        <>
+          <div className="modal-overlay" onClick={closeModal}/>
+          <div className="modal-sheet">
+            <div className="modal-handle"/>
+            <div className="modal-head">
+              <h3>Tambah Penitip</h3>
+              <button className="modal-close" onClick={closeModal}><IC.X/></button>
+            </div>
+            <div className="fgrp">
+              <label className="flabel">Nama *</label>
+              <input className="inp" placeholder="Nama penitip" value={form.nama}
+                onChange={e=>setForm({...form,nama:e.target.value})}/>
+            </div>
+            <div className="fgrp">
+              <label className="flabel">No. HP / WA</label>
+              <input className="inp" placeholder="08xx…" value={form.kontak}
+                onChange={e=>setForm({...form,kontak:e.target.value})}
+                onKeyDown={e=>e.key==='Enter'&&tambah()}/>
+            </div>
+            <button className="btn btn-blue btn-full" style={{marginTop:'.5rem'}} onClick={tambah} disabled={saving}>
+              {saving?<><MiniSpin color="white"/>Menyimpan…</>:<><IC.Plus/>Simpan Penitip</>}
+            </button>
+          </div>
+        </>
+      )}
     </div>
   );
 }
@@ -1081,13 +1223,20 @@ function PgPenitip({penitip,barang,setPenitip,notif,loading}){
 function PgBarang({penitip,barang,setBarang,notif,loading}){
   const [form,setForm] = React.useState({idPenitip:'',nama:'',stok:'',hargaSetor:'',hargaJual:''});
   const [saving,setSaving] = React.useState(false);
+  const [modalOpen,setModalOpen] = React.useState(false);
+  const [search,setSearch] = React.useState('');
+  const [filterPenitip,setFilterPenitip] = React.useState('');
+  const [filterStok,setFilterStok] = React.useState('');
+
+  const openModal = ()=>{ setForm({idPenitip:'',nama:'',stok:'',hargaSetor:'',hargaJual:''}); setModalOpen(true); };
+  const closeModal = ()=>setModalOpen(false);
 
   const tambah = async()=>{
     if(!form.idPenitip||!form.nama||!form.hargaSetor||!form.hargaJual) return notif('Lengkapi semua field','err');
     setSaving(true);
     try{
       const r = await api({action:'addBarang',...form,stok:parseInt(form.stok)||0,hargaSetor:parseInt(form.hargaSetor),hargaJual:parseInt(form.hargaJual)});
-      if(r.success){ setBarang(b=>[...b,r.data]); setForm({idPenitip:'',nama:'',stok:'',hargaSetor:'',hargaJual:''}); notif('Barang ditambahkan!'); }
+      if(r.success){ setBarang(b=>[...b,r.data]); closeModal(); notif('Barang ditambahkan!'); }
       else notif(r.error,'err');
     } catch{ notif('Gagal terhubung','err'); }
     setSaving(false);
@@ -1102,82 +1251,166 @@ function PgBarang({penitip,barang,setBarang,notif,loading}){
     } catch{ notif('Gagal terhubung','err'); }
   };
 
+  const exportExcel = ()=>{
+    const rows = filtered.map(b=>{
+      const pemilik = penitip.find(p=>p.id===b.idPenitip);
+      return {
+        'Nama Barang': b.nama,
+        Penitip: pemilik?.nama||'-',
+        Stok: b.stok,
+        'Harga Setor': b.hargaSetor,
+        'Harga Jual': b.hargaJual,
+        'Margin/pc': b.hargaJual - b.hargaSetor,
+      };
+    });
+    const ws = XLSX.utils.json_to_sheet(rows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Barang');
+    XLSX.writeFile(wb, `Barang_TitipKu_${new Date().toLocaleDateString('id-ID').replace(/\//g,'-')}.xlsx`);
+  };
+
+  const filtered = barang.filter(b=>{
+    const pemilik = penitip.find(p=>p.id===b.idPenitip);
+    const matchSearch = b.nama.toLowerCase().includes(search.toLowerCase()) ||
+      (pemilik?.nama||'').toLowerCase().includes(search.toLowerCase());
+    const matchPenitip = !filterPenitip || b.idPenitip===filterPenitip;
+    const matchStok = !filterStok ||
+      (filterStok==='ada' && b.stok>0) ||
+      (filterStok==='habis' && b.stok===0) ||
+      (filterStok==='menipis' && b.stok>0 && b.stok<=5);
+    return matchSearch && matchPenitip && matchStok;
+  });
+
   return (
     <div className="fade-up">
-      <div className="pg-head"><h2>📦 Barang</h2><p>Terima dan kelola barang titipan</p></div>
-
-      <div className="card" style={{marginBottom:'.9rem'}}>
-        <div className="card-title">Terima Barang Titipan</div>
-        <div className="frow" style={{marginBottom:'.65rem'}}>
-          <div>
-            <label className="flabel">Penitip *</label>
-            <select className="inp" value={form.idPenitip} onChange={e=>setForm({...form,idPenitip:e.target.value})}>
-              <option value="">— Pilih Penitip —</option>
-              {penitip.map(p=><option key={p.id} value={p.id}>{p.nama}</option>)}
-            </select>
-          </div>
-          <div>
-            <label className="flabel">Nama Barang *</label>
-            <input className="inp" placeholder="Cth: Nasi Uduk" value={form.nama} onChange={e=>setForm({...form,nama:e.target.value})}/>
-          </div>
-        </div>
-        <div className="frow-3" style={{marginBottom:'.65rem'}}>
-          <div>
-            <label className="flabel">Stok Awal</label>
-            <input className="inp" type="number" min="0" placeholder="0" value={form.stok} onChange={e=>setForm({...form,stok:e.target.value})}/>
-          </div>
-          <div>
-            <label className="flabel">Harga Setor</label>
-            <input className="inp" type="number" min="0" placeholder="Rp" value={form.hargaSetor} onChange={e=>setForm({...form,hargaSetor:e.target.value})}/>
-          </div>
-          <div>
-            <label className="flabel">Harga Jual</label>
-            <input className="inp" type="number" min="0" placeholder="Rp" value={form.hargaJual} onChange={e=>setForm({...form,hargaJual:e.target.value})}/>
-          </div>
-        </div>
-        <button className="btn btn-blue" onClick={tambah} disabled={saving}>
-          {saving?<><MiniSpin color="white"/>Menyimpan…</>:<><IC.Plus/>Tambah Barang</>}
+      <div className="pg-head" style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start'}}>
+        <div><h2>📦 Barang</h2><p>Kelola barang titipan</p></div>
+        <button className="btn btn-blue btn-sm" onClick={openModal} style={{marginTop:2}}>
+          <IC.Plus/>Tambah
         </button>
       </div>
 
-      {loading&&barang.length===0 ? <SkeletonCard/> :
-        barang.length===0 ? (
-          <div className="card"><div className="empty"><div className="empty-icon">📦</div><p>Belum ada barang</p><span>Tambah barang titipan di atas</span></div></div>
-        ) : (
-          <div className="barang-grid">
-            {barang.map(b=>{
-              const pemilik = penitip.find(p=>p.id===b.idPenitip);
-              const margin = b.hargaJual-b.hargaSetor;
-              const stokClass = b.stok>5?'badge-green':b.stok>0?'badge-orange':'badge-red';
-              return (
-                <div key={b.id} className="barang-card">
-                  <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:'.6rem'}}>
-                    <div style={{flex:1,minWidth:0,paddingRight:6}}>
-                      <div style={{fontWeight:700,fontSize:'.875rem',marginBottom:2}}>{b.nama}</div>
-                      <div style={{fontSize:'.7rem',color:'var(--slate-400)'}}>{pemilik?.nama||'—'}</div>
-                    </div>
-                    <span className={`badge ${stokClass}`}>{b.stok}</span>
-                  </div>
-                  <div style={{background:'var(--slate-50)',borderRadius:8,padding:'.55rem .7rem',marginBottom:'.65rem',display:'flex',justifyContent:'space-between'}}>
-                    <div>
-                      <div style={{fontSize:'.62rem',color:'var(--slate-400)',fontWeight:700}}>SETOR</div>
-                      <div style={{fontWeight:600,fontSize:'.8rem'}}>{formatRp(b.hargaSetor)}</div>
-                    </div>
-                    <div style={{textAlign:'right'}}>
-                      <div style={{fontSize:'.62rem',color:'var(--slate-400)',fontWeight:700}}>JUAL</div>
-                      <div style={{fontWeight:700,color:'var(--indigo)',fontSize:'.8rem'}}>{formatRp(b.hargaJual)}</div>
-                    </div>
-                  </div>
-                  <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
-                    <span style={{fontSize:'.72rem',color:'var(--emerald)',fontWeight:700}}>+{formatRp(margin)}/pc</span>
-                    <button className="btn btn-icon btn-red" onClick={()=>hapus(b.id)}><IC.Trash/></button>
-                  </div>
-                </div>
-              );
-            })}
+      <div className="card">
+        {/* Toolbar */}
+        <div className="list-toolbar">
+          <div className="search-bar" style={{flex:1,marginBottom:0}}>
+            <IC.Search/>
+            <input className="search-input" placeholder="Cari nama barang / penitip…"
+              value={search} onChange={e=>setSearch(e.target.value)}/>
           </div>
-        )
-      }
+          <button className="btn-export" onClick={exportExcel} title="Export Excel">
+            <IC.FileXls/>Excel
+          </button>
+        </div>
+
+        {/* Filter chips */}
+        <div className="filter-chips">
+          <button className={`chip ${filterStok===''?'on':''}`} onClick={()=>setFilterStok('')}>Semua</button>
+          <button className={`chip ${filterStok==='ada'?'on':''}`} onClick={()=>setFilterStok(filterStok==='ada'?'':'ada')}>Stok Ada</button>
+          <button className={`chip ${filterStok==='menipis'?'on':''}`} onClick={()=>setFilterStok(filterStok==='menipis'?'':'menipis')}>Menipis ≤5</button>
+          <button className={`chip ${filterStok==='habis'?'on':''}`} onClick={()=>setFilterStok(filterStok==='habis'?'':'habis')}>Habis</button>
+          {penitip.map(p=>(
+            <button key={p.id} className={`chip ${filterPenitip===p.id?'on':''}`}
+              onClick={()=>setFilterPenitip(filterPenitip===p.id?'':p.id)}>
+              {p.nama}
+            </button>
+          ))}
+        </div>
+
+        {/* Count */}
+        <div style={{fontSize:'.7rem',color:'var(--slate-400)',fontWeight:600,marginBottom:'.6rem'}}>
+          {filtered.length} dari {barang.length} barang
+        </div>
+
+        {loading&&barang.length===0 ? <SkeletonCard/> :
+          filtered.length===0 ? (
+            <div className="empty">
+              <div className="empty-icon">{search||filterStok||filterPenitip?'🔍':'📦'}</div>
+              <p>{search||filterStok||filterPenitip?'Tidak ditemukan':'Belum ada barang'}</p>
+              <span>{search||filterStok||filterPenitip?'Coba ubah filter':'Tap "+ Tambah" untuk mulai'}</span>
+            </div>
+          ) : (
+            <div className="barang-grid">
+              {filtered.map(b=>{
+                const pemilik = penitip.find(p=>p.id===b.idPenitip);
+                const margin = b.hargaJual-b.hargaSetor;
+                const stokClass = b.stok>5?'badge-green':b.stok>0?'badge-orange':'badge-red';
+                return (
+                  <div key={b.id} className="barang-card">
+                    <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:'.6rem'}}>
+                      <div style={{flex:1,minWidth:0,paddingRight:6}}>
+                        <div style={{fontWeight:700,fontSize:'.875rem',marginBottom:2}}>{b.nama}</div>
+                        <div style={{fontSize:'.7rem',color:'var(--slate-400)'}}>{pemilik?.nama||'—'}</div>
+                      </div>
+                      <span className={`badge ${stokClass}`}>{b.stok}</span>
+                    </div>
+                    <div style={{background:'var(--slate-50)',borderRadius:8,padding:'.55rem .7rem',marginBottom:'.65rem',display:'flex',justifyContent:'space-between'}}>
+                      <div>
+                        <div style={{fontSize:'.62rem',color:'var(--slate-400)',fontWeight:700}}>SETOR</div>
+                        <div style={{fontWeight:600,fontSize:'.8rem'}}>{formatRp(b.hargaSetor)}</div>
+                      </div>
+                      <div style={{textAlign:'right'}}>
+                        <div style={{fontSize:'.62rem',color:'var(--slate-400)',fontWeight:700}}>JUAL</div>
+                        <div style={{fontWeight:700,color:'var(--indigo)',fontSize:'.8rem'}}>{formatRp(b.hargaJual)}</div>
+                      </div>
+                    </div>
+                    <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+                      <span style={{fontSize:'.72rem',color:'var(--emerald)',fontWeight:700}}>+{formatRp(margin)}/pc</span>
+                      <button className="btn btn-icon btn-red" onClick={()=>hapus(b.id)}><IC.Trash/></button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )
+        }
+      </div>
+
+      {/* MODAL TAMBAH BARANG */}
+      {modalOpen&&(
+        <>
+          <div className="modal-overlay" onClick={closeModal}/>
+          <div className="modal-sheet">
+            <div className="modal-handle"/>
+            <div className="modal-head">
+              <h3>Tambah Barang</h3>
+              <button className="modal-close" onClick={closeModal}><IC.X/></button>
+            </div>
+            <div className="fgrp">
+              <label className="flabel">Penitip *</label>
+              <select className="inp" value={form.idPenitip} onChange={e=>setForm({...form,idPenitip:e.target.value})}>
+                <option value="">— Pilih Penitip —</option>
+                {penitip.map(p=><option key={p.id} value={p.id}>{p.nama}</option>)}
+              </select>
+            </div>
+            <div className="fgrp">
+              <label className="flabel">Nama Barang *</label>
+              <input className="inp" placeholder="Cth: Nasi Uduk" value={form.nama}
+                onChange={e=>setForm({...form,nama:e.target.value})}/>
+            </div>
+            <div className="frow-3">
+              <div className="fgrp">
+                <label className="flabel">Stok Awal</label>
+                <input className="inp" type="number" min="0" placeholder="0" value={form.stok}
+                  onChange={e=>setForm({...form,stok:e.target.value})}/>
+              </div>
+              <div className="fgrp">
+                <label className="flabel">Harga Setor</label>
+                <input className="inp" type="number" min="0" placeholder="Rp" value={form.hargaSetor}
+                  onChange={e=>setForm({...form,hargaSetor:e.target.value})}/>
+              </div>
+              <div className="fgrp">
+                <label className="flabel">Harga Jual</label>
+                <input className="inp" type="number" min="0" placeholder="Rp" value={form.hargaJual}
+                  onChange={e=>setForm({...form,hargaJual:e.target.value})}/>
+              </div>
+            </div>
+            <button className="btn btn-blue btn-full" style={{marginTop:'.25rem'}} onClick={tambah} disabled={saving}>
+              {saving?<><MiniSpin color="white"/>Menyimpan…</>:<><IC.Plus/>Simpan Barang</>}
+            </button>
+          </div>
+        </>
+      )}
     </div>
   );
 }
