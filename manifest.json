@@ -1,20 +1,68 @@
 {
-  "name": "My App",
-  "short_name": "MyApp",
+  "name": "TitipKu - Aplikasi Manajemen Titip Jualan",
+  "short_name": "TitipKu",
+  "description": "Aplikasi manajemen titip jualan berbasis cloud untuk toko dan pedagang",
   "start_url": "./",
+  "scope": "./",
   "display": "standalone",
-  "background_color": "#111111",
-  "theme_color": "#111111",
-  "icons": [
+  "orientation": "portrait-primary",
+  "background_color": "#f5f3ff",
+  "theme_color": "#6366f1",
+  "categories": ["business", "productivity"],
+  "screenshots": [
     {
-      "src": "icon-192.png",
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect fill='%236366f1' width='192' height='192'/%3E%3Ctext x='50%' y='50%' text-anchor='middle' dy='.3em' fill='%23fff' font-size='72' font-family='sans-serif'%3E📦%3C/text%3E%3C/svg%3E",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/svg+xml",
+      "form_factor": "narrow"
     },
     {
-      "src": "icon-512.png",
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect fill='%236366f1' width='512' height='512'/%3E%3Ctext x='50%' y='50%' text-anchor='middle' dy='.3em' fill='%23fff' font-size='192' font-family='sans-serif'%3E📦%3C/text%3E%3C/svg%3E",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/svg+xml",
+      "form_factor": "wide"
+    }
+  ],
+  "icons": [
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect fill='%236366f1' width='192' height='192' rx='40'/%3E%3Ctext x='50%' y='50%' text-anchor='middle' dy='.3em' fill='%23fff' font-size='100' font-family='sans-serif'%3E📦%3C/text%3E%3C/svg%3E",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect fill='%236366f1' width='192' height='192' rx='40'/%3E%3Ctext x='50%' y='50%' text-anchor='middle' dy='.3em' fill='%23fff' font-size='100' font-family='sans-serif'%3E📦%3C/text%3E%3C/svg%3E",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    },
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect fill='%236366f1' width='512' height='512' rx='90'/%3E%3Ctext x='50%' y='50%' text-anchor='middle' dy='.3em' fill='%23fff' font-size='280' font-family='sans-serif'%3E📦%3C/text%3E%3C/svg%3E",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect fill='%236366f1' width='512' height='512' rx='90'/%3E%3Ctext x='50%' y='50%' text-anchor='middle' dy='.3em' fill='%23fff' font-size='280' font-family='sans-serif'%3E📦%3C/text%3E%3C/svg%3E",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Buka Penitip",
+      "short_name": "Penitip",
+      "description": "Kelola daftar penitip",
+      "url": "./?tab=penitip",
+      "icons": [{"src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect fill='%236366f1' width='192' height='192' rx='40'/%3E%3Ctext x='50%' y='50%' y='50%' text-anchor='middle' dy='.3em' fill='%23fff' font-size='100'%3E👥%3C/text%3E%3C/svg%3E", "sizes": "192x192", "type": "image/svg+xml"}]
+    },
+    {
+      "name": "Buka Barang",
+      "short_name": "Barang",
+      "description": "Kelola daftar barang",
+      "url": "./?tab=barang",
+      "icons": [{"src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect fill='%236366f1' width='192' height='192' rx='40'/%3E%3Ctext x='50%' y='50%' text-anchor='middle' dy='.3em' fill='%23fff' font-size='100'%3E📦%3C/text%3E%3C/svg%3E", "sizes": "192x192", "type": "image/svg+xml"}]
     }
   ]
 }

@@ -764,21 +764,46 @@ function SkeletonCard(){
 function PwaBanner(){
   const [prompt, setPrompt] = React.useState(null);
   const [show, setShow] = React.useState(false);
+  const [installing, setInstalling] = React.useState(false);
 
   React.useEffect(()=>{
     const dismissed = sessionStorage.getItem('pwa_dismissed');
     if(dismissed) return;
     const handler = e => { e.preventDefault(); setPrompt(e); setShow(true); };
     window.addEventListener('beforeinstallprompt', handler);
-    return ()=>window.removeEventListener('beforeinstallprompt', handler);
+    
+    // Notifikasi jika sudah install
+    window.addEventListener('appinstalled', () => {
+      console.log('✅ Aplikasi berhasil di-install!');
+      setShow(false);
+      sessionStorage.setItem('pwa_dismissed','1');
+    });
+    
+    return ()=>{
+      window.removeEventListener('beforeinstallprompt', handler);
+      window.removeEventListener('appinstalled', handler);
+    };
   },[]);
 
   const install = async()=>{
     if(!prompt) return;
-    await prompt.prompt();
-    const r = await prompt.userChoice;
-    if(r.outcome==='accepted') setShow(false);
+    setInstalling(true);
+    try{
+      await prompt.prompt();
+      const r = await prompt.userChoice;
+      if(r.outcome==='accepted') {
+        console.log('✅ User accepted install');
+        setShow(false);
+        sessionStorage.setItem('pwa_dismissed','1');
+      } else {
+        console.log('❌ User rejected install');
+      }
+    } catch(err){
+      console.error('Install error:', err);
+    }
+    setInstalling(false);
   };
+  
   const dismiss = ()=>{ setShow(false); sessionStorage.setItem('pwa_dismissed','1'); };
 
   if(!show) return null;
@@ -788,11 +813,11 @@ function PwaBanner(){
         <div className="pwa-app-icon">📦</div>
         <div className="pwa-info">
           <strong>Pasang TitipKu di HP kamu</strong>
-          <span>Akses cepat langsung dari layar utama</span>
+          <span>Akses cepat langsung dari layar utama • Offline ready</span>
         </div>
         <div className="pwa-actions">
-          <button className="pwa-install" onClick={install}>
-            <IC.Download/> Pasang
+          <button className="pwa-install" onClick={install} disabled={installing}>
+            {installing ? <MiniSpin color="white"/> : <IC.Download/>} {installing?'Memasang...':'Pasang'}
           </button>
           <button className="pwa-dismiss" onClick={dismiss}><IC.X/></button>
         </div>
@@ -1583,24 +1608,14 @@ function PgSetoran({penitip,barang,penjualan,loading}){
 // ── RENDER ──────────────────────────────────────────────────────
 ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
 
-// ── SERVICE WORKER (PWA offline support) ────────────────────────
+// ── SERVICE WORKER REGISTRATION ────────────────────────────────────
 if('serviceWorker' in navigator){
   window.addEventListener('load',()=>{
-    const sw = `
-self.addEventListener('install',e=>{ self.skipWaiting(); });
-self.addEventListener('activate',e=>{ e.waitUntil(clients.claim()); });
-self.addEventListener('fetch',e=>{
-  if(e.request.method!=='GET') return;
-  if(e.request.url.includes('googleapis') || e.request.url.includes('cdnjs') || e.request.url.includes('script.google')) return;
-  e.respondWith(
-    caches.open('titipku-v1').then(c=>
-      c.match(e.request).then(r=>r||fetch(e.request).then(res=>{ c.put(e.request,res.clone()); return res; }))
-    )
-  );
-});`;
-    const blob = new Blob([sw],{type:'application/javascript'});
-    const url = URL.createObjectURL(blob);
-    navigator.serviceWorker.register(url).catch(()=>{});
+    navigator.serviceWorker.register('./sw.js').then(reg=>{
+      console.log('✅ Service Worker registered');
+    }).catch(err=>{
+      console.log('⚠️ SW registration failed:', err);
+    });
   });
 }
 </script>
@@ -1645,50 +1660,5 @@ transform:translateY(0);
 }
 </style>
 
-<div id="installBox">
-<div style="font-size:18px;font-weight:bold;">
-Install Aplikasi
-</div>
-
-<div style="opacity:.8;margin-top:6px;">
-Tambahkan aplikasi ke layar utama agar lebih cepat digunakan.
-</div>
-
-<button id="installBtn">
-Install Sekarang
-</button>
-</div>
-
-<script>
-let deferredPrompt;
-
-window.addEventListener('beforeinstallprompt', (e) => {
-e.preventDefault();
-deferredPrompt = e;
-
-document.getElementById('installBox').style.display = 'block';
-});
-
-document.getElementById('installBtn').addEventListener('click', async () => {
-
-if (!deferredPrompt) return;
-
-deferredPrompt.prompt();
-
-const { outcome } = await deferredPrompt.userChoice;
-
-if (outcome === 'accepted') {
-document.getElementById('installBox').style.display = 'none';
-}
-
-deferredPrompt = null;
-});
-
-if ('serviceWorker' in navigator) {
-window.addEventListener('load', () => {
-navigator.serviceWorker.register('./sw.js');
-});
-}
-</script>
 </body>
 </html>
