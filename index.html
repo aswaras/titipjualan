@@ -230,31 +230,16 @@ select.inp{cursor:pointer}
   display:flex;flex-direction:column;
   position:fixed;top:0;left:0;height:100dvh;z-index:50;
 }
-.sb-brand{
-  padding:1.4rem 1.1rem 1.1rem;
-  border-bottom:1px solid var(--slate-150);
-}
-.sb-logo{display:flex;align-items:center;gap:10px}
-.sb-logo-icon{
-  width:38px;height:38px;border-radius:11px;
-  background:linear-gradient(135deg,var(--indigo),var(--violet));
-  display:flex;align-items:center;justify-content:center;font-size:18px;
-  box-shadow:var(--sh-indigo);
-}
-.sb-logo h1{
-  font-size:1.22rem;font-weight:800;letter-spacing:-.03em;
-  background:linear-gradient(135deg,var(--indigo-dark),var(--violet));
-  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
-}
-.sb-sync{
-  display:flex;align-items:center;gap:5px;
-  margin-top:.5rem;font-size:.63rem;color:var(--slate-400);font-weight:500;
-}
 .sb-dot{
   width:6px;height:6px;border-radius:50%;
   background:#22c55e;flex-shrink:0;
 }
 
+.sb-user-top{
+  padding:.9rem .65rem .6rem;
+  border-bottom:1px solid var(--slate-150);
+}
+.sb-user-top .sb-user{margin-bottom:0}
 .sb-nav{padding:.7rem .65rem;flex:1;overflow-y:auto}
 .sb-section{
   font-size:.6rem;font-weight:800;color:var(--slate-300);
@@ -930,16 +915,15 @@ function App(){
 
       {/* SIDEBAR */}
       <aside className="sidebar">
-        <<!-- div className="sb-brand">
-          <div className="sb-logo">
-            <div className="sb-logo-icon">📦</div>
-            <h1>TitipKu</h1>
+        <div className="sb-user-top">
+          <div className="sb-user">
+            <div className="sb-avatar">{user.nama?.[0]?.toUpperCase()||'U'}</div>
+            <div style={{minWidth:0}}>
+              <div className="sb-uname">{user.nama}</div>
+              <div className="sb-uemail">{user.email}</div>
+            </div>
           </div>
-          <div className="conn-chip">
-            <div className="sb-dot pulse-dot"/>
-            <IC.Cloud/> Spreadsheet terhubung
-          </div>
-        </div> -->
+        </div>
         <nav className="sb-nav">
           <div className="sb-section">Menu Utama</div>
           {navs.map(({id,label,I})=>(
@@ -949,13 +933,6 @@ function App(){
           ))}
         </nav>
         <div className="sb-footer">
-          <div className="sb-user">
-            <div className="sb-avatar">{user.nama?.[0]?.toUpperCase()||'U'}</div>
-            <div style={{minWidth:0}}>
-              <div className="sb-uname">{user.nama}</div>
-              <div className="sb-uemail">{user.email}</div>
-            </div>
-          </div>
           <button className="sb-logout" onClick={logout}><IC.Logout style={{width:13,height:13}}/>Keluar</button>
         </div>
       </aside>
