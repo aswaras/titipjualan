@@ -1,0 +1,947 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TitipKu – Manajemen Titip Jualan</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Plus Jakarta Sans', sans-serif; background: #f0f4ff; color: #1e293b; }
+    button { cursor: pointer; border: none; font-family: inherit; }
+    input, select { font-family: inherit; }
+
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:.5; } }
+
+    .animate-fade-in { animation: fadeIn 0.3s ease forwards; }
+    .animate-slide-down { animation: slideDown 0.3s ease forwards; }
+    .spinner { animation: spin 0.8s linear infinite; }
+    .pulse-dot { animation: pulse 2s ease-in-out infinite; }
+
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+
+    /* Login Page */
+    .auth-bg {
+      min-height: 100vh;
+      background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 40%, #312e81 100%);
+      display: flex; align-items: center; justify-content: center;
+      padding: 1rem;
+      position: relative;
+      overflow: hidden;
+    }
+    .auth-bg::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.04'%3E%3Ccircle cx='30' cy='30' r='20'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    }
+    .auth-card {
+      background: white;
+      border-radius: 24px;
+      padding: 2.5rem;
+      width: 100%; max-width: 420px;
+      box-shadow: 0 25px 60px rgba(0,0,0,0.25);
+      position: relative; z-index: 1;
+    }
+    .auth-logo {
+      display: flex; align-items: center; gap: 10px;
+      margin-bottom: 1.5rem; justify-content: center;
+    }
+    .auth-logo-icon {
+      width: 48px; height: 48px;
+      background: linear-gradient(135deg, #2563eb, #4f46e5);
+      border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      color: white; font-size: 22px;
+    }
+    .auth-logo h1 { font-size: 1.75rem; font-weight: 800; color: #1e40af; }
+    .auth-title { text-align: center; margin-bottom: 2rem; }
+    .auth-title h2 { font-size: 1.25rem; font-weight: 700; color: #1e293b; }
+    .auth-title p { color: #64748b; font-size: .875rem; margin-top: .25rem; }
+    .auth-tabs { display: flex; background: #f1f5f9; border-radius: 12px; padding: 4px; margin-bottom: 1.5rem; gap: 4px; }
+    .auth-tab {
+      flex: 1; padding: .6rem; border-radius: 9px; font-weight: 600;
+      font-size: .875rem; transition: all .2s; background: transparent; color: #64748b;
+    }
+    .auth-tab.active { background: white; color: #2563eb; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+    .form-group { margin-bottom: 1rem; }
+    .form-group label { display: block; font-size: .8rem; font-weight: 600; color: #475569; margin-bottom: .4rem; }
+    .form-control {
+      width: 100%; padding: .75rem 1rem;
+      border: 1.5px solid #e2e8f0; border-radius: 12px;
+      font-size: .9rem; transition: all .2s; outline: none; color: #1e293b;
+      background: white;
+    }
+    .form-control:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,0.1); }
+    .btn-primary {
+      width: 100%; padding: .85rem;
+      background: linear-gradient(135deg, #2563eb, #4f46e5);
+      color: white; border-radius: 12px; font-weight: 700; font-size: 1rem;
+      transition: all .2s; margin-top: .5rem;
+    }
+    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 8px 20px rgba(37,99,235,0.35); }
+    .btn-primary:active { transform: translateY(0); }
+    .btn-primary:disabled { opacity: 0.7; cursor: not-allowed; transform: none; }
+    .error-box {
+      background: #fef2f2; border: 1px solid #fecaca; color: #b91c1c;
+      border-radius: 10px; padding: .75rem 1rem; font-size: .875rem; margin-bottom: 1rem;
+    }
+
+    /* App Layout */
+    .app-layout { display: flex; min-height: 100vh; }
+    .sidebar {
+      width: 240px; flex-shrink: 0;
+      background: white; border-right: 1px solid #e2e8f0;
+      display: flex; flex-direction: column;
+      position: fixed; top: 0; left: 0; height: 100vh; z-index: 40;
+    }
+    .sidebar-brand {
+      padding: 1.5rem 1.25rem;
+      border-bottom: 1px solid #f1f5f9;
+    }
+    .sidebar-brand h1 {
+      font-size: 1.4rem; font-weight: 800; color: #2563eb;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .sync-badge {
+      display: flex; align-items: center; gap: 6px;
+      margin-top: .5rem; font-size: .7rem; color: #64748b;
+    }
+    .nav-list { padding: .75rem; flex: 1; overflow-y: auto; }
+    .nav-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: .65rem .9rem; border-radius: 10px;
+      font-size: .875rem; font-weight: 500; color: #64748b;
+      transition: all .15s; width: 100%; text-align: left;
+      background: transparent; margin-bottom: 2px;
+    }
+    .nav-item:hover { background: #f8fafc; color: #1e293b; }
+    .nav-item.active { background: #eff6ff; color: #2563eb; font-weight: 700; }
+    .nav-item svg { width: 18px; height: 18px; flex-shrink: 0; }
+    .sidebar-footer { padding: 1rem; border-top: 1px solid #f1f5f9; }
+    .user-info {
+      display: flex; align-items: center; gap: 10px;
+      padding: .65rem .9rem; border-radius: 10px;
+      background: #f8fafc; margin-bottom: 8px;
+    }
+    .user-avatar {
+      width: 34px; height: 34px; border-radius: 50%;
+      background: linear-gradient(135deg, #2563eb, #4f46e5);
+      display: flex; align-items: center; justify-content: center;
+      color: white; font-weight: 700; font-size: .85rem; flex-shrink: 0;
+    }
+    .user-name { font-size: .8rem; font-weight: 600; color: #1e293b; }
+    .user-email { font-size: .7rem; color: #94a3b8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 130px; }
+    .btn-logout {
+      width: 100%; padding: .55rem; border-radius: 9px;
+      background: #fef2f2; color: #dc2626; font-size: .8rem; font-weight: 600;
+      transition: all .15s;
+    }
+    .btn-logout:hover { background: #fee2e2; }
+
+    /* Main Content */
+    .main-content {
+      flex: 1; padding: 2rem;
+      margin-left: 240px;
+      padding-bottom: 5rem;
+    }
+    .page-header { margin-bottom: 2rem; }
+    .page-header h2 { font-size: 1.75rem; font-weight: 800; color: #0f172a; }
+    .page-header p { color: #64748b; margin-top: .25rem; }
+
+    /* Bottom Nav (Mobile) */
+    .bottom-nav {
+      display: none;
+      position: fixed; bottom: 0; left: 0; right: 0; z-index: 40;
+      background: white; border-top: 1px solid #e2e8f0;
+      padding: .5rem .25rem;
+    }
+    .bottom-nav ul { display: flex; justify-content: space-around; list-style: none; }
+    .bottom-nav-item {
+      display: flex; flex-direction: column; align-items: center; gap: 2px;
+      padding: .4rem .6rem; border-radius: 10px; font-size: .6rem;
+      font-weight: 600; color: #94a3b8; background: transparent;
+      transition: all .15s;
+    }
+    .bottom-nav-item.active { color: #2563eb; background: #eff6ff; }
+    .bottom-nav-item svg { width: 20px; height: 20px; }
+
+    /* Mobile: header strip */
+    .mobile-header {
+      display: none;
+      position: sticky; top: 0; z-index: 30;
+      background: white; border-bottom: 1px solid #e2e8f0;
+      padding: .75rem 1rem;
+      justify-content: space-between; align-items: center;
+    }
+    .mobile-brand { font-size: 1.1rem; font-weight: 800; color: #2563eb; display: flex; align-items: center; gap: 6px; }
+
+    @media (max-width: 768px) {
+      .sidebar { display: none; }
+      .main-content { margin-left: 0; padding: 1rem; padding-bottom: 6rem; }
+      .bottom-nav { display: block; }
+      .mobile-header { display: flex; }
+    }
+
+    /* Cards & Components */
+    .card {
+      background: white; border-radius: 16px;
+      border: 1px solid #f1f5f9; padding: 1.25rem;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+    }
+    .card-title { font-size: 1rem; font-weight: 700; color: #1e293b; margin-bottom: 1rem; }
+
+    .stat-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
+    .stat-card {
+      background: white; border-radius: 16px; padding: 1.25rem;
+      border: 1px solid #f1f5f9; box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+    }
+    .stat-icon { width: 42px; height: 42px; border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-bottom: .75rem; }
+    .stat-label { font-size: .75rem; color: #94a3b8; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; }
+    .stat-value { font-size: 1.4rem; font-weight: 800; color: #1e293b; margin-top: .15rem; }
+
+    .hero-card {
+      background: linear-gradient(135deg, #2563eb 0%, #4f46e5 100%);
+      border-radius: 20px; padding: 1.5rem; color: white;
+      margin-bottom: 1.5rem; position: relative; overflow: hidden;
+    }
+    .hero-card::after {
+      content: ''; position: absolute; top: -30px; right: -30px;
+      width: 150px; height: 150px; border-radius: 50%;
+      background: rgba(255,255,255,0.08);
+    }
+    .hero-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1.25rem; }
+    .hero-stat { background: rgba(255,255,255,0.15); border-radius: 14px; padding: 1rem; backdrop-filter: blur(4px); }
+    .hero-stat-label { font-size: .7rem; text-transform: uppercase; letter-spacing: .06em; opacity: .7; }
+    .hero-stat-value { font-size: 1.35rem; font-weight: 800; margin-top: .2rem; }
+
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: .75rem; }
+    @media (max-width: 580px) { .form-row { grid-template-columns: 1fr; } .stat-grid { grid-template-columns: 1fr 1fr; } }
+
+    .input {
+      width: 100%; padding: .7rem .9rem;
+      border: 1.5px solid #e2e8f0; border-radius: 10px; font-size: .875rem;
+      outline: none; transition: all .15s; color: #1e293b; background: white;
+    }
+    .input:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,0.1); }
+    select.input { cursor: pointer; }
+
+    .btn {
+      padding: .65rem 1.25rem; border-radius: 10px; font-weight: 600;
+      font-size: .875rem; transition: all .15s; display: inline-flex; align-items: center; gap: 6px;
+    }
+    .btn-blue { background: #2563eb; color: white; }
+    .btn-blue:hover { background: #1d4ed8; }
+    .btn-icon { width: 34px; height: 34px; border-radius: 8px; display: flex; align-items: center; justify-content: center; }
+    .btn-danger { background: #fef2f2; color: #dc2626; }
+    .btn-danger:hover { background: #fee2e2; }
+    .btn-green { background: #059669; color: white; }
+    .btn-green:hover { background: #047857; }
+
+    .list-item {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: .85rem 0; border-bottom: 1px solid #f8fafc;
+    }
+    .list-item:last-child { border-bottom: none; }
+
+    .barang-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1rem; }
+    .barang-card { background: white; border-radius: 14px; padding: 1.1rem; border: 1.5px solid #f1f5f9; transition: all .15s; }
+    .barang-card:hover { border-color: #bfdbfe; box-shadow: 0 4px 16px rgba(37,99,235,0.07); }
+
+    .stok-badge {
+      padding: .25rem .65rem; border-radius: 999px; font-size: .7rem; font-weight: 700;
+    }
+    .stok-ok { background: #dcfce7; color: #15803d; }
+    .stok-low { background: #fff7ed; color: #c2410c; }
+    .stok-empty { background: #fef2f2; color: #dc2626; }
+
+    .kasir-item {
+      padding: .85rem; border: 1.5px solid #f1f5f9; border-radius: 12px;
+      cursor: pointer; transition: all .15s; background: white;
+    }
+    .kasir-item:hover { border-color: #bfdbfe; background: #f8faff; }
+    .kasir-item.selected { border-color: #059669; background: #f0fdf4; }
+    .kasir-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: .75rem; }
+
+    .qty-control { display: flex; align-items: center; border: 1.5px solid #e2e8f0; border-radius: 10px; overflow: hidden; }
+    .qty-btn { background: #f8fafc; padding: .6rem 1rem; font-size: 1.1rem; font-weight: 700; color: #475569; transition: all .1s; }
+    .qty-btn:hover { background: #f1f5f9; }
+    .qty-input { border: none; text-align: center; width: 70px; font-size: 1.2rem; font-weight: 800; outline: none; color: #1e293b; padding: .4rem; }
+
+    .toast {
+      position: fixed; top: 1rem; right: 1rem; z-index: 9999;
+      padding: .8rem 1.25rem; border-radius: 12px; font-weight: 600; font-size: .875rem;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+      display: flex; align-items: center; gap: 8px;
+    }
+    .toast-success { background: #059669; color: white; }
+    .toast-error { background: #dc2626; color: white; }
+
+    .loading-screen {
+      min-height: 100vh; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 1rem;
+    }
+    .spinner-ring {
+      width: 48px; height: 48px; border: 4px solid #e2e8f0;
+      border-top-color: #2563eb; border-radius: 50%;
+    }
+
+    .setoran-card { background: white; border-radius: 16px; border: 1px solid #f1f5f9; overflow: hidden; margin-bottom: 1rem; }
+    .setoran-header { background: #f8fafc; padding: 1rem 1.25rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; }
+    .setoran-body { padding: 1rem 1.25rem; }
+    .setoran-row { display: flex; justify-content: space-between; font-size: .875rem; padding: .3rem 0; }
+
+    .empty-state { text-align: center; padding: 3rem 1rem; color: #94a3b8; }
+    .empty-state svg { width: 48px; height: 48px; margin: 0 auto 1rem; opacity: .4; }
+    .empty-state p { font-weight: 500; }
+    .empty-state span { font-size: .8rem; margin-top: .25rem; display: block; }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+// ⚙️ GANTI DENGAN URL WEB APP GOOGLE APPS SCRIPT ANDA
+const GAS_URL = 'https://script.google.com/macros/s/GANTI_DENGAN_DEPLOYMENT_URL_ANDA/exec';
+
+// ============================================================
+// API HELPER
+// ============================================================
+async function api(payload) {
+  const token = localStorage.getItem('titipku_token');
+  if (token && !payload.token) payload.token = token;
+  const res = await fetch(GAS_URL, {
+    method: 'POST',
+    body: JSON.stringify(payload),
+    headers: { 'Content-Type': 'text/plain' } // GAS tidak support application/json dari browser langsung
+  });
+  return await res.json();
+}
+
+// ============================================================
+// ICONS (SVG inline)
+// ============================================================
+const Icon = {
+  Home: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>,
+  Users: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>,
+  Package: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="16.5" y1="9.4" x2="7.5" y2="4.21"/><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>,
+  Cart: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>,
+  Wallet: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4z"/></svg>,
+  Plus: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>,
+  Trash: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>,
+  Check: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>,
+  Alert: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>,
+  Trend: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>,
+  Logout: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>,
+  Cloud: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg>,
+};
+
+// ============================================================
+// HELPER
+// ============================================================
+const formatRp = (n) => new Intl.NumberFormat('id-ID', { style:'currency', currency:'IDR', maximumFractionDigits:0 }).format(n || 0);
+
+// ============================================================
+// AUTH PAGE
+// ============================================================
+function AuthPage({ onLogin }) {
+  const [tab, setTab] = React.useState('login');
+  const [form, setForm] = React.useState({ email:'', password:'', nama:'' });
+  const [loading, setLoading] = React.useState(false);
+  const [error, setError] = React.useState('');
+
+  const handle = async () => {
+    setError(''); setLoading(true);
+    try {
+      const action = tab === 'login' ? 'login' : 'register';
+      const res = await api({ action, ...form });
+      if (res.success) {
+        localStorage.setItem('titipku_token', res.token);
+        localStorage.setItem('titipku_user', JSON.stringify(res.user));
+        onLogin(res.user);
+      } else {
+        setError(res.error || 'Terjadi kesalahan.');
+      }
+    } catch (e) {
+      setError('Tidak dapat terhubung ke server. Cek koneksi internet Anda.');
+    }
+    setLoading(false);
+  };
+
+  return (
+    <div className="auth-bg">
+      <div className="auth-card animate-fade-in">
+        <div className="auth-logo">
+          <div className="auth-logo-icon">📦</div>
+          <h1>TitipKu</h1>
+        </div>
+        <div className="auth-title">
+          <h2>{tab === 'login' ? 'Selamat Datang Kembali' : 'Buat Akun Baru'}</h2>
+          <p>{tab === 'login' ? 'Login untuk akses data titipan Anda' : 'Daftar gratis, mulai kelola titipan'}</p>
+        </div>
+
+        <div className="auth-tabs">
+          <button className={`auth-tab ${tab === 'login' ? 'active' : ''}`} onClick={() => { setTab('login'); setError(''); }}>Masuk</button>
+          <button className={`auth-tab ${tab === 'register' ? 'active' : ''}`} onClick={() => { setTab('register'); setError(''); }}>Daftar</button>
+        </div>
+
+        {error && <div className="error-box">⚠️ {error}</div>}
+
+        {tab === 'register' && (
+          <div className="form-group">
+            <label>Nama Toko / Nama Anda</label>
+            <input className="form-control" placeholder="Cth: Warung Bu Sari" value={form.nama} onChange={e => setForm({...form, nama: e.target.value})} />
+          </div>
+        )}
+        <div className="form-group">
+          <label>Email</label>
+          <input className="form-control" type="email" placeholder="email@contoh.com" value={form.email} onChange={e => setForm({...form, email: e.target.value})} />
+        </div>
+        <div className="form-group">
+          <label>Password</label>
+          <input className="form-control" type="password" placeholder={tab === 'register' ? 'Minimal 6 karakter' : '••••••••'} value={form.password}
+            onChange={e => setForm({...form, password: e.target.value})}
+            onKeyDown={e => e.key === 'Enter' && handle()} />
+        </div>
+        <button className="btn-primary" onClick={handle} disabled={loading}>
+          {loading ? '⏳ Memproses...' : (tab === 'login' ? '🚀 Masuk' : '✨ Buat Akun')}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================
+// MAIN APP
+// ============================================================
+function App() {
+  const [user, setUser] = React.useState(() => {
+    try { return JSON.parse(localStorage.getItem('titipku_user')); } catch { return null; }
+  });
+  const [activeTab, setActiveTab] = React.useState('beranda');
+  const [penitip, setPenitip] = React.useState([]);
+  const [barang, setBarang] = React.useState([]);
+  const [penjualan, setPenjualan] = React.useState([]);
+  const [loading, setLoading] = React.useState(false);
+  const [notif, setNotif] = React.useState(null);
+
+  const showNotif = (pesan, tipe = 'success') => {
+    setNotif({ pesan, tipe });
+    setTimeout(() => setNotif(null), 3000);
+  };
+
+  const logout = () => {
+    localStorage.removeItem('titipku_token');
+    localStorage.removeItem('titipku_user');
+    setUser(null);
+  };
+
+  // Fetch all data when user logs in
+  React.useEffect(() => {
+    if (!user) return;
+    fetchAll();
+  }, [user]);
+
+  const fetchAll = async () => {
+    setLoading(true);
+    try {
+      const [rP, rB, rJ] = await Promise.all([
+        api({ action: 'getPenitip' }),
+        api({ action: 'getBarang' }),
+        api({ action: 'getPenjualan' }),
+      ]);
+      if (rP.success) setPenitip(rP.data);
+      if (rB.success) setBarang(rB.data);
+      if (rJ.success) setPenjualan(rJ.data);
+    } catch (e) {
+      showNotif('Gagal memuat data. Cek koneksi.', 'error');
+    }
+    setLoading(false);
+  };
+
+  if (!user) return <AuthPage onLogin={(u) => setUser(u)} />;
+  if (loading && penitip.length === 0) return (
+    <div className="loading-screen">
+      <div className="spinner-ring spinner"></div>
+      <p style={{color:'#64748b',fontWeight:600}}>Memuat data dari Spreadsheet...</p>
+    </div>
+  );
+
+  const navItems = [
+    { id: 'beranda', label: 'Beranda', Icon: Icon.Home },
+    { id: 'penitip', label: 'Penitip', Icon: Icon.Users },
+    { id: 'barang',  label: 'Barang',  Icon: Icon.Package },
+    { id: 'kasir',   label: 'Kasir',   Icon: Icon.Cart },
+    { id: 'setoran', label: 'Setoran', Icon: Icon.Wallet },
+  ];
+
+  return (
+    <div className="app-layout">
+      {/* Toast */}
+      {notif && (
+        <div className={`toast animate-slide-down ${notif.tipe === 'error' ? 'toast-error' : 'toast-success'}`}>
+          {notif.tipe === 'error' ? <Icon.Alert /> : <Icon.Check />}
+          {notif.pesan}
+        </div>
+      )}
+
+      {/* SIDEBAR */}
+      <aside className="sidebar">
+        <div className="sidebar-brand">
+          <h1>📦 TitipKu</h1>
+          <div className="sync-badge">
+            <span style={{width:7,height:7,borderRadius:'50%',background:'#22c55e',flexShrink:0}} className="pulse-dot"></span>
+            Spreadsheet Terhubung
+          </div>
+        </div>
+        <nav className="nav-list">
+          {navItems.map(({ id, label, Icon: NavIcon }) => (
+            <button key={id} className={`nav-item ${activeTab === id ? 'active' : ''}`} onClick={() => setActiveTab(id)}>
+              <NavIcon /> {label}
+            </button>
+          ))}
+        </nav>
+        <div className="sidebar-footer">
+          <div className="user-info">
+            <div className="user-avatar">{user.nama?.[0]?.toUpperCase() || 'U'}</div>
+            <div>
+              <div className="user-name">{user.nama}</div>
+              <div className="user-email">{user.email}</div>
+            </div>
+          </div>
+          <button className="btn-logout" onClick={logout}><Icon.Logout style={{width:14,height:14,display:'inline',marginRight:5}} />Keluar</button>
+        </div>
+      </aside>
+
+      {/* MOBILE HEADER */}
+      <div className="mobile-header">
+        <span className="mobile-brand">📦 TitipKu</span>
+        <button style={{background:'#fef2f2',padding:'.4rem .75rem',borderRadius:8,fontSize:'.75rem',fontWeight:600,color:'#dc2626'}} onClick={logout}>Keluar</button>
+      </div>
+
+      {/* MAIN */}
+      <main className="main-content">
+        {activeTab === 'beranda' && <PageBeranda penitip={penitip} barang={barang} penjualan={penjualan} user={user} />}
+        {activeTab === 'penitip' && <PagePenitip penitip={penitip} barang={barang} setPenitip={setPenitip} showNotif={showNotif} />}
+        {activeTab === 'barang'  && <PageBarang  penitip={penitip} barang={barang} setBarang={setBarang} showNotif={showNotif} />}
+        {activeTab === 'kasir'   && <PageKasir   barang={barang} penjualan={penjualan} setBarang={setBarang} setPenjualan={setPenjualan} showNotif={showNotif} />}
+        {activeTab === 'setoran' && <PageSetoran penitip={penitip} barang={barang} penjualan={penjualan} />}
+      </main>
+
+      {/* BOTTOM NAV */}
+      <nav className="bottom-nav">
+        <ul>
+          {navItems.map(({ id, label, Icon: NavIcon }) => (
+            <li key={id}>
+              <button className={`bottom-nav-item ${activeTab === id ? 'active' : ''}`} onClick={() => setActiveTab(id)}>
+                <NavIcon /> {label}
+              </button>
+            </li>
+          ))}
+        </ul>
+      </nav>
+    </div>
+  );
+}
+
+// ============================================================
+// PAGE: BERANDA
+// ============================================================
+function PageBeranda({ penitip, barang, penjualan, user }) {
+  const totalPenjualan = penjualan.reduce((t, p) => {
+    const b = barang.find(x => x.id === p.idBarang);
+    return t + (b ? b.hargaJual * p.qty : 0);
+  }, 0);
+  const keuntungan = penjualan.reduce((t, p) => {
+    const b = barang.find(x => x.id === p.idBarang);
+    return t + (b ? (b.hargaJual - b.hargaSetor) * p.qty : 0);
+  }, 0);
+
+  return (
+    <div className="animate-fade-in">
+      <div className="page-header">
+        <h2>👋 Halo, {user.nama}!</h2>
+        <p>Pantau bisnis titip jualan Anda hari ini.</p>
+      </div>
+
+      <div className="hero-card">
+        <div style={{fontSize:'.8rem',opacity:.7,textTransform:'uppercase',letterSpacing:'.08em'}}>Ringkasan Bisnis</div>
+        <div style={{fontSize:'1rem',fontWeight:600,marginTop:4}}>Data tersimpan di Google Spreadsheet Anda</div>
+        <div className="hero-grid">
+          <div className="hero-stat">
+            <div className="hero-stat-label">Keuntungan Bersih</div>
+            <div className="hero-stat-value">{formatRp(keuntungan)}</div>
+          </div>
+          <div className="hero-stat">
+            <div className="hero-stat-label">Omzet Kotor</div>
+            <div className="hero-stat-value">{formatRp(totalPenjualan)}</div>
+          </div>
+        </div>
+      </div>
+
+      <div className="stat-grid" style={{gridTemplateColumns:'repeat(3,1fr)'}}>
+        <div className="stat-card">
+          <div className="stat-icon" style={{background:'#eff6ff'}}><span style={{fontSize:'1.3rem'}}>👥</span></div>
+          <div className="stat-label">Mitra Penitip</div>
+          <div className="stat-value">{penitip.length}</div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-icon" style={{background:'#fff7ed'}}><span style={{fontSize:'1.3rem'}}>📦</span></div>
+          <div className="stat-label">Macam Barang</div>
+          <div className="stat-value">{barang.length}</div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-icon" style={{background:'#f0fdf4'}}><span style={{fontSize:'1.3rem'}}>🛒</span></div>
+          <div className="stat-label">Total Transaksi</div>
+          <div className="stat-value">{penjualan.length}</div>
+        </div>
+      </div>
+
+      <div className="card">
+        <div className="card-title">5 Penjualan Terakhir</div>
+        {penjualan.slice(0, 5).length === 0 ? (
+          <div className="empty-state"><Icon.Cart /><p>Belum ada penjualan</p><span>Catat penjualan di menu Kasir</span></div>
+        ) : penjualan.slice(0, 5).map(p => {
+          const b = barang.find(x => x.id === p.idBarang);
+          return (
+            <div key={p.id} className="list-item">
+              <div>
+                <div style={{fontWeight:600,fontSize:'.9rem'}}>{b ? b.nama : 'Barang dihapus'}</div>
+                <div style={{fontSize:'.75rem',color:'#94a3b8',marginTop:2}}>
+                  {new Date(p.tanggal).toLocaleString('id-ID', {day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})} • {p.qty} item
+                </div>
+              </div>
+              <div style={{fontWeight:700,color:'#059669'}}>{formatRp((b?.hargaJual || 0) * p.qty)}</div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ============================================================
+// PAGE: PENITIP
+// ============================================================
+function PagePenitip({ penitip, barang, setPenitip, showNotif }) {
+  const [form, setForm] = React.useState({ nama: '', kontak: '' });
+  const [saving, setSaving] = React.useState(false);
+
+  const tambah = async () => {
+    if (!form.nama.trim()) return showNotif('Nama penitip wajib diisi.', 'error');
+    setSaving(true);
+    try {
+      const res = await api({ action: 'addPenitip', nama: form.nama.trim(), kontak: form.kontak.trim() });
+      if (res.success) {
+        setPenitip(prev => [...prev, res.data]);
+        setForm({ nama: '', kontak: '' });
+        showNotif('Penitip berhasil ditambahkan!');
+      } else showNotif(res.error, 'error');
+    } catch { showNotif('Gagal terhubung ke server.', 'error'); }
+    setSaving(false);
+  };
+
+  const hapus = async (id) => {
+    if (barang.some(b => b.idPenitip === id)) return showNotif('Gagal: Penitip masih memiliki barang!', 'error');
+    if (!confirm('Hapus penitip ini?')) return;
+    try {
+      const res = await api({ action: 'deletePenitip', id });
+      if (res.success) { setPenitip(prev => prev.filter(p => p.id !== id)); showNotif('Penitip dihapus.'); }
+      else showNotif(res.error, 'error');
+    } catch { showNotif('Gagal terhubung ke server.', 'error'); }
+  };
+
+  return (
+    <div className="animate-fade-in">
+      <div className="page-header"><h2>👥 Penitip</h2><p>Kelola mitra penitip barang Anda.</p></div>
+
+      <div className="card" style={{marginBottom:'1.5rem'}}>
+        <div className="card-title">Tambah Penitip Baru</div>
+        <div className="form-row" style={{marginBottom:'.75rem'}}>
+          <input className="input" placeholder="Nama Penitip *" value={form.nama} onChange={e => setForm({...form, nama: e.target.value})} />
+          <input className="input" placeholder="No. HP / WA (opsional)" value={form.kontak} onChange={e => setForm({...form, kontak: e.target.value})} onKeyDown={e => e.key === 'Enter' && tambah()} />
+        </div>
+        <button className="btn btn-blue" onClick={tambah} disabled={saving}>
+          <Icon.Plus />{saving ? 'Menyimpan...' : 'Tambah Penitip'}
+        </button>
+      </div>
+
+      <div className="card">
+        <div className="card-title">Daftar Mitra ({penitip.length})</div>
+        {penitip.length === 0 ? (
+          <div className="empty-state"><Icon.Users /><p>Belum ada penitip</p><span>Tambah penitip pertama Anda di atas</span></div>
+        ) : penitip.map(p => (
+          <div key={p.id} className="list-item">
+            <div>
+              <div style={{fontWeight:600}}>{p.nama}</div>
+              <div style={{fontSize:'.8rem',color:'#94a3b8',marginTop:2}}>{p.kontak || 'Tidak ada kontak'}</div>
+            </div>
+            <button className="btn btn-icon btn-danger" onClick={() => hapus(p.id)}><Icon.Trash /></button>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ============================================================
+// PAGE: BARANG
+// ============================================================
+function PageBarang({ penitip, barang, setBarang, showNotif }) {
+  const [form, setForm] = React.useState({ idPenitip:'', nama:'', stok:'', hargaSetor:'', hargaJual:'' });
+  const [saving, setSaving] = React.useState(false);
+
+  const tambah = async () => {
+    if (!form.idPenitip || !form.nama || !form.hargaSetor || !form.hargaJual) return showNotif('Lengkapi semua field wajib.', 'error');
+    setSaving(true);
+    try {
+      const res = await api({ action: 'addBarang', ...form, stok: parseInt(form.stok)||0, hargaSetor: parseInt(form.hargaSetor), hargaJual: parseInt(form.hargaJual) });
+      if (res.success) {
+        setBarang(prev => [...prev, res.data]);
+        setForm({ idPenitip:'', nama:'', stok:'', hargaSetor:'', hargaJual:'' });
+        showNotif('Barang berhasil ditambahkan!');
+      } else showNotif(res.error, 'error');
+    } catch { showNotif('Gagal terhubung ke server.', 'error'); }
+    setSaving(false);
+  };
+
+  const hapus = async (id) => {
+    if (!confirm('Hapus barang ini?')) return;
+    try {
+      const res = await api({ action: 'deleteBarang', id });
+      if (res.success) { setBarang(prev => prev.filter(b => b.id !== id)); showNotif('Barang dihapus.'); }
+      else showNotif(res.error, 'error');
+    } catch { showNotif('Gagal terhubung ke server.', 'error'); }
+  };
+
+  return (
+    <div className="animate-fade-in">
+      <div className="page-header"><h2>📦 Barang</h2><p>Terima dan kelola barang titipan.</p></div>
+
+      <div className="card" style={{marginBottom:'1.5rem'}}>
+        <div className="card-title">Terima Barang Titipan</div>
+        <div className="form-row" style={{marginBottom:'.75rem'}}>
+          <select className="input" value={form.idPenitip} onChange={e => setForm({...form, idPenitip: e.target.value})}>
+            <option value="">-- Pilih Penitip *</option>
+            {penitip.map(p => <option key={p.id} value={p.id}>{p.nama}</option>)}
+          </select>
+          <input className="input" placeholder="Nama Barang *" value={form.nama} onChange={e => setForm({...form, nama: e.target.value})} />
+        </div>
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:'.75rem',marginBottom:'.75rem'}}>
+          <div>
+            <label style={{fontSize:'.75rem',color:'#64748b',fontWeight:600,display:'block',marginBottom:4}}>Stok Awal</label>
+            <input className="input" type="number" placeholder="0" min="0" value={form.stok} onChange={e => setForm({...form, stok: e.target.value})} />
+          </div>
+          <div>
+            <label style={{fontSize:'.75rem',color:'#64748b',fontWeight:600,display:'block',marginBottom:4}}>Harga Setor (Rp)</label>
+            <input className="input" type="number" placeholder="0" min="0" value={form.hargaSetor} onChange={e => setForm({...form, hargaSetor: e.target.value})} />
+          </div>
+          <div>
+            <label style={{fontSize:'.75rem',color:'#64748b',fontWeight:600,display:'block',marginBottom:4}}>Harga Jual (Rp)</label>
+            <input className="input" type="number" placeholder="0" min="0" value={form.hargaJual} onChange={e => setForm({...form, hargaJual: e.target.value})} />
+          </div>
+        </div>
+        <button className="btn btn-blue" onClick={tambah} disabled={saving}>
+          <Icon.Plus />{saving ? 'Menyimpan...' : 'Tambah Barang'}
+        </button>
+      </div>
+
+      {barang.length === 0 ? (
+        <div className="card"><div className="empty-state"><Icon.Package /><p>Belum ada barang</p><span>Tambah barang titipan di atas</span></div></div>
+      ) : (
+        <div className="barang-grid">
+          {barang.map(b => {
+            const pemilik = penitip.find(p => p.id === b.idPenitip);
+            const untung = b.hargaJual - b.hargaSetor;
+            const stokClass = b.stok > 5 ? 'stok-ok' : b.stok > 0 ? 'stok-low' : 'stok-empty';
+            return (
+              <div key={b.id} className="barang-card">
+                <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:'.75rem'}}>
+                  <div style={{flex:1,minWidth:0}}>
+                    <div style={{fontWeight:700,fontSize:'.95rem',marginBottom:3}}>{b.nama}</div>
+                    <div style={{fontSize:'.75rem',color:'#94a3b8'}}>{pemilik?.nama || 'Penitip dihapus'}</div>
+                  </div>
+                  <span className={`stok-badge ${stokClass}`}>Stok: {b.stok}</span>
+                </div>
+                <div style={{background:'#f8fafc',borderRadius:10,padding:'.6rem .75rem',marginBottom:'.75rem',display:'flex',justifyContent:'space-between'}}>
+                  <div>
+                    <div style={{fontSize:'.7rem',color:'#94a3b8'}}>Setor</div>
+                    <div style={{fontWeight:600,fontSize:'.85rem'}}>{formatRp(b.hargaSetor)}</div>
+                  </div>
+                  <div style={{textAlign:'right'}}>
+                    <div style={{fontSize:'.7rem',color:'#94a3b8'}}>Jual</div>
+                    <div style={{fontWeight:700,color:'#2563eb',fontSize:'.85rem'}}>{formatRp(b.hargaJual)}</div>
+                  </div>
+                </div>
+                <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+                  <span style={{fontSize:'.75rem',color:'#059669',fontWeight:600}}>+{formatRp(untung)}/pc</span>
+                  <button className="btn btn-icon btn-danger" style={{width:30,height:30}} onClick={() => hapus(b.id)}><Icon.Trash /></button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ============================================================
+// PAGE: KASIR
+// ============================================================
+function PageKasir({ barang, penjualan, setBarang, setPenjualan, showNotif }) {
+  const [selected, setSelected] = React.useState(null);
+  const [qty, setQty] = React.useState(1);
+  const [saving, setSaving] = React.useState(false);
+
+  const available = barang.filter(b => b.stok > 0);
+  const item = barang.find(b => b.id === selected);
+
+  const simpan = async () => {
+    if (!item || !qty || qty <= 0) return;
+    if (item.stok < qty) return showNotif(`Stok tidak cukup! Sisa: ${item.stok}`, 'error');
+    setSaving(true);
+    try {
+      const stokBaru = item.stok - qty;
+      const res = await api({ action: 'addPenjualan', idBarang: item.id, qty, stokBaru });
+      if (res.success) {
+        setBarang(prev => prev.map(b => b.id === item.id ? {...b, stok: stokBaru} : b));
+        setPenjualan(prev => [res.data, ...prev]);
+        setSelected(null); setQty(1);
+        showNotif(`Penjualan ${item.nama} x${qty} berhasil dicatat!`);
+      } else showNotif(res.error, 'error');
+    } catch { showNotif('Gagal terhubung ke server.', 'error'); }
+    setSaving(false);
+  };
+
+  return (
+    <div className="animate-fade-in">
+      <div className="page-header"><h2>🛒 Kasir</h2><p>Catat penjualan barang titipan.</p></div>
+
+      <div className="card" style={{marginBottom:'1.25rem'}}>
+        <div className="card-title">
+          <span style={{background:'#f0fdf4',color:'#15803d',width:24,height:24,borderRadius:999,display:'inline-flex',alignItems:'center',justifyContent:'center',fontSize:'.8rem',marginRight:8,fontWeight:700}}>1</span>
+          Pilih Barang
+        </div>
+        {available.length === 0 ? (
+          <div className="empty-state" style={{padding:'1.5rem'}}><Icon.Package /><p>Semua stok habis</p></div>
+        ) : (
+          <div className="kasir-grid">
+            {available.map(b => (
+              <button key={b.id} className={`kasir-item ${selected === b.id ? 'selected' : ''}`}
+                onClick={() => { setSelected(b.id); setQty(1); }}>
+                <div style={{fontWeight:700,fontSize:'.875rem',marginBottom:6,color: selected===b.id?'#065f46':'#1e293b'}}>{b.nama}</div>
+                <div style={{fontWeight:800,color:'#059669'}}>{formatRp(b.hargaJual)}</div>
+                <div style={{fontSize:'.7rem',color:'#94a3b8',marginTop:3,fontWeight:500}}>STOK: {b.stok}</div>
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {item && (
+        <div className="card animate-slide-down" style={{border:'2px solid #059669'}}>
+          <div style={{position:'absolute',top:0,right:0,background:'#059669',color:'white',padding:'.25rem .75rem',borderRadius:'0 14px 0 10px',fontSize:'.7rem',fontWeight:700}}>
+            TERPILIH
+          </div>
+          <div className="card-title">
+            <span style={{background:'#f0fdf4',color:'#15803d',width:24,height:24,borderRadius:999,display:'inline-flex',alignItems:'center',justifyContent:'center',fontSize:'.8rem',marginRight:8,fontWeight:700}}>2</span>
+            Atur Jumlah &amp; Simpan
+          </div>
+          <div style={{background:'#f8fafc',borderRadius:10,padding:'.85rem',display:'flex',justifyContent:'space-between',marginBottom:'1rem'}}>
+            <div><div style={{fontSize:'.7rem',color:'#94a3b8',marginBottom:2}}>BARANG</div><div style={{fontWeight:700}}>{item.nama}</div></div>
+            <div style={{textAlign:'right'}}><div style={{fontSize:'.7rem',color:'#94a3b8',marginBottom:2}}>HARGA</div><div style={{fontWeight:700,color:'#059669'}}>{formatRp(item.hargaJual)}</div></div>
+          </div>
+          <div style={{marginBottom:'1rem'}}>
+            <div style={{fontSize:'.8rem',fontWeight:600,color:'#475569',marginBottom:8}}>Jumlah Laku (maks. {item.stok})</div>
+            <div className="qty-control">
+              <button className="qty-btn" onClick={() => setQty(q => Math.max(1, q - 1))}>−</button>
+              <input className="qty-input" type="number" min="1" max={item.stok} value={qty}
+                onChange={e => { let v=parseInt(e.target.value)||1; if(v>item.stok) v=item.stok; setQty(v); }} />
+              <button className="qty-btn" onClick={() => setQty(q => Math.min(item.stok, q + 1))}>+</button>
+            </div>
+          </div>
+          <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',borderTop:'1px solid #f1f5f9',paddingTop:'1rem',marginBottom:'1rem'}}>
+            <span style={{fontWeight:700,color:'#475569'}}>Total:</span>
+            <span style={{fontWeight:800,fontSize:'1.4rem',color:'#059669'}}>{formatRp(item.hargaJual * qty)}</span>
+          </div>
+          <button className="btn btn-green" style={{width:'100%',padding:'.9rem',fontSize:'1rem',justifyContent:'center'}} onClick={simpan} disabled={saving}>
+            <Icon.Check />{saving ? 'Menyimpan...' : 'Simpan Penjualan'}
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ============================================================
+// PAGE: SETORAN
+// ============================================================
+function PageSetoran({ penitip, barang, penjualan }) {
+  const hitungSetoran = (idPenitip) =>
+    penjualan.reduce((t, p) => {
+      const b = barang.find(x => x.id === p.idBarang);
+      return t + (b && b.idPenitip === idPenitip ? b.hargaSetor * p.qty : 0);
+    }, 0);
+
+  const penitipDenganSetoran = penitip.filter(p => hitungSetoran(p.id) > 0);
+
+  return (
+    <div className="animate-fade-in">
+      <div className="page-header"><h2>💰 Setoran</h2><p>Uang yang harus Anda bayarkan ke penitip.</p></div>
+
+      {penitipDenganSetoran.length === 0 ? (
+        <div className="card"><div className="empty-state"><Icon.Wallet /><p>Belum ada tagihan setoran</p><span>Catat penjualan di Kasir agar laporan ini terisi</span></div></div>
+      ) : penitipDenganSetoran.map(p => {
+        const totalSetor = hitungSetoran(p.id);
+        const detailLaku = penjualan.filter(j => { const b = barang.find(x => x.id === j.idBarang); return b && b.idPenitip === p.id; });
+        const summary = {};
+        detailLaku.forEach(j => {
+          const b = barang.find(x => x.id === j.idBarang);
+          if (!b) return;
+          if (!summary[b.id]) summary[b.id] = { nama: b.nama, qty: 0, hargaSetor: b.hargaSetor };
+          summary[b.id].qty += j.qty;
+        });
+
+        return (
+          <div key={p.id} className="setoran-card">
+            <div className="setoran-header">
+              <div>
+                <div style={{fontWeight:700,fontSize:'1rem'}}>{p.nama}</div>
+                <div style={{fontSize:'.75rem',color:'#94a3b8',marginTop:2}}>{p.kontak || '-'}</div>
+              </div>
+              <div style={{textAlign:'right'}}>
+                <div style={{fontSize:'.7rem',color:'#94a3b8',marginBottom:2}}>WAJIB SETOR</div>
+                <div style={{fontWeight:800,fontSize:'1.25rem',color:'#2563eb'}}>{formatRp(totalSetor)}</div>
+              </div>
+            </div>
+            <div className="setoran-body">
+              <div style={{fontSize:'.7rem',color:'#94a3b8',fontWeight:700,textTransform:'uppercase',marginBottom:8}}>Rincian Barang Laku</div>
+              {Object.values(summary).map((item, i) => (
+                <div key={i} className="setoran-row">
+                  <span style={{color:'#475569'}}>{item.nama} <span style={{color:'#94a3b8'}}>×{item.qty}</span></span>
+                  <span style={{fontWeight:600}}>{formatRp(item.qty * item.hargaSetor)}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// ============================================================
+// RENDER
+// ============================================================
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>
