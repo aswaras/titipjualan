@@ -1,879 +1,1289 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>TitipKu – Manajemen Titip Jualan</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Plus Jakarta Sans', sans-serif; background: #f0f4ff; color: #1e293b; }
-    button { cursor: pointer; border: none; font-family: inherit; }
-    input, select { font-family: inherit; }
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+<meta name="theme-color" content="#6366f1"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="default"/>
+<meta name="apple-mobile-web-app-title" content="TitipKu"/>
+<meta name="description" content="Aplikasi manajemen titip jualan berbasis cloud"/>
+<title>TitipKu</title>
+<link rel="manifest" href="data:application/json,%7B%22name%22%3A%22TitipKu%22%2C%22short_name%22%3A%22TitipKu%22%2C%22start_url%22%3A%22%2F%22%2C%22display%22%3A%22standalone%22%2C%22theme_color%22%3A%22%236366f1%22%2C%22background_color%22%3A%22%23f5f3ff%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22data%3Aimage%2Fsvg%2Bxml%2C%253Csvg...%22%2C%22sizes%22%3A%22192x192%22%7D%5D%7D"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+<style>
+:root {
+  --indigo: #6366f1; --indigo-dark: #4f46e5; --indigo-deep: #3730a3;
+  --indigo-light: #eef2ff; --indigo-mid: #c7d2fe;
+  --violet: #7c3aed; --violet-light: #f5f3ff;
+  --emerald: #059669; --emerald-light: #ecfdf5; --emerald-mid: #a7f3d0;
+  --rose: #e11d48; --rose-light: #fff1f2; --rose-mid: #fecdd3;
+  --amber: #d97706; --amber-light: #fffbeb; --amber-mid: #fde68a;
+  --slate-50: #f8fafc; --slate-100: #f1f5f9; --slate-150: #eaeff5;
+  --slate-200: #e2e8f0; --slate-300: #cbd5e1;
+  --slate-400: #94a3b8; --slate-500: #64748b; --slate-600: #475569;
+  --slate-700: #334155; --slate-800: #1e293b; --slate-900: #0f172a;
+  --bg: #f5f3ff; --white: #ffffff;
+  --r-xs: 8px; --r-sm: 10px; --r: 14px; --r-lg: 18px; --r-xl: 22px; --r-2xl: 28px;
+  --sh-xs: 0 1px 2px rgba(0,0,0,.05);
+  --sh-sm: 0 2px 8px rgba(0,0,0,.07);
+  --sh: 0 4px 16px rgba(0,0,0,.09);
+  --sh-lg: 0 8px 28px rgba(0,0,0,.13);
+  --sh-indigo: 0 6px 20px rgba(99,102,241,.28);
+  --nav-h: 64px;
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-top: env(safe-area-inset-top, 0px);
+}
 
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
-    @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:.5; } }
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html{scroll-behavior:smooth}
+body{
+  font-family:'Plus Jakarta Sans',sans-serif;
+  background:var(--bg);color:var(--slate-800);
+  -webkit-font-smoothing:antialiased;overscroll-behavior:none;
+}
+button{cursor:pointer;border:none;font-family:inherit;outline:none}
+input,select,textarea{font-family:inherit;outline:none}
+img{display:block}
 
-    .animate-fade-in { animation: fadeIn 0.3s ease forwards; }
-    .animate-slide-down { animation: slideDown 0.3s ease forwards; }
-    .spinner { animation: spin 0.8s linear infinite; }
-    .pulse-dot { animation: pulse 2s ease-in-out infinite; }
+::-webkit-scrollbar{width:3px;height:3px}
+::-webkit-scrollbar-thumb{background:var(--slate-200);border-radius:4px}
 
-    ::-webkit-scrollbar { width: 4px; }
-    ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+/* ── Animations ─────────────────────────────────── */
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes slideDown{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
+@keyframes slideUp{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:translateY(0)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+@keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
+@keyframes popIn{0%{opacity:0;transform:scale(.9)}100%{opacity:1;transform:scale(1)}}
+@keyframes dot-bounce{0%,80%,100%{transform:scale(0)}40%{transform:scale(1)}}
+@keyframes pwaSlide{from{opacity:0;transform:translateY(100%)}to{opacity:1;transform:translateY(0)}}
 
-    /* Login Page */
-    .auth-bg {
-      min-height: 100vh;
-      background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 40%, #312e81 100%);
-      display: flex; align-items: center; justify-content: center;
-      padding: 1rem;
-      position: relative;
-      overflow: hidden;
-    }
-    .auth-bg::before {
-      content: '';
-      position: absolute; inset: 0;
-      background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.04'%3E%3Ccircle cx='30' cy='30' r='20'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
-    }
-    .auth-card {
-      background: white;
-      border-radius: 24px;
-      padding: 2.5rem;
-      width: 100%; max-width: 420px;
-      box-shadow: 0 25px 60px rgba(0,0,0,0.25);
-      position: relative; z-index: 1;
-    }
-    .auth-logo {
-      display: flex; align-items: center; gap: 10px;
-      margin-bottom: 1.5rem; justify-content: center;
-    }
-    .auth-logo-icon {
-      width: 48px; height: 48px;
-      background: linear-gradient(135deg, #2563eb, #4f46e5);
-      border-radius: 14px;
-      display: flex; align-items: center; justify-content: center;
-      color: white; font-size: 22px;
-    }
-    .auth-logo h1 { font-size: 1.75rem; font-weight: 800; color: #1e40af; }
-    .auth-title { text-align: center; margin-bottom: 2rem; }
-    .auth-title h2 { font-size: 1.25rem; font-weight: 700; color: #1e293b; }
-    .auth-title p { color: #64748b; font-size: .875rem; margin-top: .25rem; }
-    .auth-tabs { display: flex; background: #f1f5f9; border-radius: 12px; padding: 4px; margin-bottom: 1.5rem; gap: 4px; }
-    .auth-tab {
-      flex: 1; padding: .6rem; border-radius: 9px; font-weight: 600;
-      font-size: .875rem; transition: all .2s; background: transparent; color: #64748b;
-    }
-    .auth-tab.active { background: white; color: #2563eb; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-    .form-group { margin-bottom: 1rem; }
-    .form-group label { display: block; font-size: .8rem; font-weight: 600; color: #475569; margin-bottom: .4rem; }
-    .form-control {
-      width: 100%; padding: .75rem 1rem;
-      border: 1.5px solid #e2e8f0; border-radius: 12px;
-      font-size: .9rem; transition: all .2s; outline: none; color: #1e293b;
-      background: white;
-    }
-    .form-control:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,0.1); }
-    .btn-primary {
-      width: 100%; padding: .85rem;
-      background: linear-gradient(135deg, #2563eb, #4f46e5);
-      color: white; border-radius: 12px; font-weight: 700; font-size: 1rem;
-      transition: all .2s; margin-top: .5rem;
-    }
-    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 8px 20px rgba(37,99,235,0.35); }
-    .btn-primary:active { transform: translateY(0); }
-    .btn-primary:disabled { opacity: 0.7; cursor: not-allowed; transform: none; }
-    .error-box {
-      background: #fef2f2; border: 1px solid #fecaca; color: #b91c1c;
-      border-radius: 10px; padding: .75rem 1rem; font-size: .875rem; margin-bottom: 1rem;
-    }
+.fade-up{animation:fadeUp .3s ease forwards}
+.fade-in{animation:fadeIn .25s ease forwards}
+.pop-in{animation:popIn .22s cubic-bezier(.34,1.56,.64,1) forwards}
+.spin{animation:spin .7s linear infinite}
+.pulse-dot{animation:pulse 2s ease-in-out infinite}
 
-    /* App Layout */
-    .app-layout { display: flex; min-height: 100vh; }
-    .sidebar {
-      width: 240px; flex-shrink: 0;
-      background: white; border-right: 1px solid #e2e8f0;
-      display: flex; flex-direction: column;
-      position: fixed; top: 0; left: 0; height: 100vh; z-index: 40;
-    }
-    .sidebar-brand {
-      padding: 1.5rem 1.25rem;
-      border-bottom: 1px solid #f1f5f9;
-    }
-    .sidebar-brand h1 {
-      font-size: 1.4rem; font-weight: 800; color: #2563eb;
-      display: flex; align-items: center; gap: 8px;
-    }
-    .sync-badge {
-      display: flex; align-items: center; gap: 6px;
-      margin-top: .5rem; font-size: .7rem; color: #64748b;
-    }
-    .nav-list { padding: .75rem; flex: 1; overflow-y: auto; }
-    .nav-item {
-      display: flex; align-items: center; gap: 10px;
-      padding: .65rem .9rem; border-radius: 10px;
-      font-size: .875rem; font-weight: 500; color: #64748b;
-      transition: all .15s; width: 100%; text-align: left;
-      background: transparent; margin-bottom: 2px;
-    }
-    .nav-item:hover { background: #f8fafc; color: #1e293b; }
-    .nav-item.active { background: #eff6ff; color: #2563eb; font-weight: 700; }
-    .nav-item svg { width: 18px; height: 18px; flex-shrink: 0; }
-    .sidebar-footer { padding: 1rem; border-top: 1px solid #f1f5f9; }
-    .user-info {
-      display: flex; align-items: center; gap: 10px;
-      padding: .65rem .9rem; border-radius: 10px;
-      background: #f8fafc; margin-bottom: 8px;
-    }
-    .user-avatar {
-      width: 34px; height: 34px; border-radius: 50%;
-      background: linear-gradient(135deg, #2563eb, #4f46e5);
-      display: flex; align-items: center; justify-content: center;
-      color: white; font-weight: 700; font-size: .85rem; flex-shrink: 0;
-    }
-    .user-name { font-size: .8rem; font-weight: 600; color: #1e293b; }
-    .user-email { font-size: .7rem; color: #94a3b8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 130px; }
-    .btn-logout {
-      width: 100%; padding: .55rem; border-radius: 9px;
-      background: #fef2f2; color: #dc2626; font-size: .8rem; font-weight: 600;
-      transition: all .15s;
-    }
-    .btn-logout:hover { background: #fee2e2; }
+.skeleton{
+  background:linear-gradient(90deg,var(--slate-100) 25%,var(--slate-50) 50%,var(--slate-100) 75%);
+  background-size:200% 100%;animation:shimmer 1.4s infinite;
+  border-radius:var(--r-sm);
+}
 
-    /* Main Content */
-    .main-content {
-      flex: 1; padding: 2rem;
-      margin-left: 240px;
-      padding-bottom: 5rem;
-    }
-    .page-header { margin-bottom: 2rem; }
-    .page-header h2 { font-size: 1.75rem; font-weight: 800; color: #0f172a; }
-    .page-header p { color: #64748b; margin-top: .25rem; }
+/* ══════════════════════════════════════════════════
+   AUTH PAGE
+══════════════════════════════════════════════════ */
+.auth-wrap{
+  min-height:100dvh;
+  background:linear-gradient(145deg,#312e81 0%,#4f46e5 40%,#7c3aed 100%);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:1.25rem;position:relative;overflow:hidden;
+}
+.auth-orb{
+  position:absolute;border-radius:50%;pointer-events:none;
+  filter:blur(55px);opacity:.55;
+}
+.auth-orb-1{width:320px;height:320px;background:#818cf8;top:-120px;right:-100px}
+.auth-orb-2{width:280px;height:280px;background:#a78bfa;bottom:-100px;left:-80px}
+.auth-orb-3{width:180px;height:180px;background:#c4b5fd;top:40%;left:50%;transform:translate(-50%,-50%);opacity:.2}
 
-    /* Bottom Nav (Mobile) */
-    .bottom-nav {
-      display: none;
-      position: fixed; bottom: 0; left: 0; right: 0; z-index: 40;
-      background: white; border-top: 1px solid #e2e8f0;
-      padding: .5rem .25rem;
-    }
-    .bottom-nav ul { display: flex; justify-content: space-around; list-style: none; }
-    .bottom-nav-item {
-      display: flex; flex-direction: column; align-items: center; gap: 2px;
-      padding: .4rem .6rem; border-radius: 10px; font-size: .6rem;
-      font-weight: 600; color: #94a3b8; background: transparent;
-      transition: all .15s;
-    }
-    .bottom-nav-item.active { color: #2563eb; background: #eff6ff; }
-    .bottom-nav-item svg { width: 20px; height: 20px; }
+.auth-card{
+  background:var(--white);border-radius:var(--r-2xl);
+  padding:2rem 1.75rem 1.75rem;width:100%;max-width:390px;
+  box-shadow:0 40px 90px rgba(0,0,0,.35);
+  position:relative;z-index:1;
+  animation:slideUp .45s cubic-bezier(.34,1.1,.64,1);
+}
+.auth-brand{
+  display:flex;align-items:center;gap:11px;
+  margin-bottom:1.6rem;justify-content:center;
+}
+.auth-icon{
+  width:48px;height:48px;border-radius:15px;
+  background:linear-gradient(135deg,var(--indigo),var(--violet));
+  display:flex;align-items:center;justify-content:center;font-size:22px;
+  box-shadow:var(--sh-indigo);
+}
+.auth-brand h1{
+  font-size:1.7rem;font-weight:800;
+  background:linear-gradient(135deg,var(--indigo-dark),var(--violet));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  letter-spacing:-.03em;
+}
+.auth-sub{text-align:center;margin-bottom:1.5rem}
+.auth-sub h2{font-size:1.05rem;font-weight:700;color:var(--slate-800)}
+.auth-sub p{color:var(--slate-400);font-size:.8rem;margin-top:.25rem}
 
-    /* Mobile: header strip */
-    .mobile-header {
-      display: none;
-      position: sticky; top: 0; z-index: 30;
-      background: white; border-bottom: 1px solid #e2e8f0;
-      padding: .75rem 1rem;
-      justify-content: space-between; align-items: center;
-    }
-    .mobile-brand { font-size: 1.1rem; font-weight: 800; color: #2563eb; display: flex; align-items: center; gap: 6px; }
+.seg{
+  display:flex;background:var(--slate-100);
+  border-radius:var(--r-sm);padding:3px;gap:3px;margin-bottom:1.5rem;
+}
+.seg-btn{
+  flex:1;padding:.58rem;border-radius:8px;
+  font-weight:700;font-size:.82rem;
+  color:var(--slate-400);background:transparent;transition:all .18s;
+}
+.seg-btn.on{background:var(--white);color:var(--indigo);box-shadow:var(--sh-sm)}
 
-    @media (max-width: 768px) {
-      .sidebar { display: none; }
-      .main-content { margin-left: 0; padding: 1rem; padding-bottom: 6rem; }
-      .bottom-nav { display: block; }
-      .mobile-header { display: flex; }
-    }
+.fgrp{margin-bottom:.9rem}
+.fgrp label,.flabel{
+  display:block;font-size:.72rem;font-weight:700;
+  color:var(--slate-500);margin-bottom:.38rem;letter-spacing:.02em;text-transform:uppercase;
+}
+.finput,.inp{
+  width:100%;padding:.72rem .95rem;
+  border:1.5px solid var(--slate-200);border-radius:var(--r-sm);
+  font-size:.875rem;color:var(--slate-800);background:var(--white);
+  transition:border-color .15s,box-shadow .15s;
+}
+.finput:focus,.inp:focus{
+  border-color:var(--indigo);
+  box-shadow:0 0 0 3px rgba(99,102,241,.12);
+}
+select.inp{cursor:pointer}
 
-    /* Cards & Components */
-    .card {
-      background: white; border-radius: 16px;
-      border: 1px solid #f1f5f9; padding: 1.25rem;
-      box-shadow: 0 1px 4px rgba(0,0,0,0.04);
-    }
-    .card-title { font-size: 1rem; font-weight: 700; color: #1e293b; margin-bottom: 1rem; }
+.err-box{
+  background:var(--rose-light);border:1.5px solid var(--rose-mid);
+  color:var(--rose);border-radius:var(--r-sm);
+  padding:.65rem .9rem;font-size:.8rem;
+  margin-bottom:.9rem;display:flex;align-items:center;gap:7px;
+}
 
-    .stat-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
-    .stat-card {
-      background: white; border-radius: 16px; padding: 1.25rem;
-      border: 1px solid #f1f5f9; box-shadow: 0 1px 4px rgba(0,0,0,0.04);
-    }
-    .stat-icon { width: 42px; height: 42px; border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-bottom: .75rem; }
-    .stat-label { font-size: .75rem; color: #94a3b8; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; }
-    .stat-value { font-size: 1.4rem; font-weight: 800; color: #1e293b; margin-top: .15rem; }
+.btn-auth{
+  width:100%;padding:.88rem;
+  background:linear-gradient(135deg,var(--indigo),var(--violet));
+  color:var(--white);border-radius:var(--r-sm);
+  font-weight:700;font-size:.92rem;
+  transition:all .18s;margin-top:.3rem;
+  box-shadow:var(--sh-indigo);letter-spacing:.01em;
+}
+.btn-auth:active{transform:scale(.98);box-shadow:none}
+.btn-auth:disabled{opacity:.6;cursor:not-allowed;transform:none}
 
-    .hero-card {
-      background: linear-gradient(135deg, #2563eb 0%, #4f46e5 100%);
-      border-radius: 20px; padding: 1.5rem; color: white;
-      margin-bottom: 1.5rem; position: relative; overflow: hidden;
-    }
-    .hero-card::after {
-      content: ''; position: absolute; top: -30px; right: -30px;
-      width: 150px; height: 150px; border-radius: 50%;
-      background: rgba(255,255,255,0.08);
-    }
-    .hero-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1.25rem; }
-    .hero-stat { background: rgba(255,255,255,0.15); border-radius: 14px; padding: 1rem; backdrop-filter: blur(4px); }
-    .hero-stat-label { font-size: .7rem; text-transform: uppercase; letter-spacing: .06em; opacity: .7; }
-    .hero-stat-value { font-size: 1.35rem; font-weight: 800; margin-top: .2rem; }
+/* ══════════════════════════════════════════════════
+   PWA INSTALL BANNER — redesigned
+══════════════════════════════════════════════════ */
+.pwa-banner{
+  position:fixed;bottom:0;left:0;right:0;z-index:300;
+  background:linear-gradient(135deg,#312e81,#4f46e5 50%,#7c3aed);
+  padding:1.1rem 1.25rem calc(1.1rem + var(--safe-bottom));
+  animation:pwaSlide .4s cubic-bezier(.34,1.1,.64,1);
+  border-radius:22px 22px 0 0;
+}
+.pwa-inner{display:flex;align-items:center;gap:13px}
+.pwa-app-icon{
+  width:50px;height:50px;border-radius:14px;flex-shrink:0;
+  background:rgba(255,255,255,.15);backdrop-filter:blur(8px);
+  border:1.5px solid rgba(255,255,255,.25);
+  display:flex;align-items:center;justify-content:center;font-size:24px;
+}
+.pwa-info{flex:1;min-width:0}
+.pwa-info strong{
+  display:block;font-size:.9rem;font-weight:800;
+  color:#fff;letter-spacing:-.01em;
+}
+.pwa-info span{font-size:.72rem;color:rgba(255,255,255,.65);margin-top:.1rem;display:block}
+.pwa-actions{display:flex;gap:8px;flex-shrink:0}
+.pwa-install{
+  background:var(--white);color:var(--indigo);
+  border-radius:var(--r-xs);padding:.5rem 1rem;
+  font-size:.8rem;font-weight:800;
+  box-shadow:0 2px 8px rgba(0,0,0,.2);
+  white-space:nowrap;
+}
+.pwa-dismiss{
+  width:34px;height:34px;border-radius:var(--r-xs);
+  background:rgba(255,255,255,.15);border:1.5px solid rgba(255,255,255,.2);
+  display:flex;align-items:center;justify-content:center;
+  color:rgba(255,255,255,.8);flex-shrink:0;
+}
+.pwa-dismiss svg{width:14px;height:14px}
 
-    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: .75rem; }
-    @media (max-width: 580px) { .form-row { grid-template-columns: 1fr; } .stat-grid { grid-template-columns: 1fr 1fr; } }
+/* ══════════════════════════════════════════════════
+   APP SHELL
+══════════════════════════════════════════════════ */
+.shell{display:flex;min-height:100dvh;background:var(--bg)}
 
-    .input {
-      width: 100%; padding: .7rem .9rem;
-      border: 1.5px solid #e2e8f0; border-radius: 10px; font-size: .875rem;
-      outline: none; transition: all .15s; color: #1e293b; background: white;
-    }
-    .input:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,0.1); }
-    select.input { cursor: pointer; }
+/* Sidebar desktop */
+.sidebar{
+  width:228px;flex-shrink:0;
+  background:var(--white);
+  border-right:1px solid var(--slate-150);
+  display:flex;flex-direction:column;
+  position:fixed;top:0;left:0;height:100dvh;z-index:50;
+}
+.sb-brand{
+  padding:1.4rem 1.1rem 1.1rem;
+  border-bottom:1px solid var(--slate-150);
+}
+.sb-logo{display:flex;align-items:center;gap:10px}
+.sb-logo-icon{
+  width:38px;height:38px;border-radius:11px;
+  background:linear-gradient(135deg,var(--indigo),var(--violet));
+  display:flex;align-items:center;justify-content:center;font-size:18px;
+  box-shadow:var(--sh-indigo);
+}
+.sb-logo h1{
+  font-size:1.22rem;font-weight:800;letter-spacing:-.03em;
+  background:linear-gradient(135deg,var(--indigo-dark),var(--violet));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+}
+.sb-sync{
+  display:flex;align-items:center;gap:5px;
+  margin-top:.5rem;font-size:.63rem;color:var(--slate-400);font-weight:500;
+}
+.sb-dot{
+  width:6px;height:6px;border-radius:50%;
+  background:#22c55e;flex-shrink:0;
+}
 
-    .btn {
-      padding: .65rem 1.25rem; border-radius: 10px; font-weight: 600;
-      font-size: .875rem; transition: all .15s; display: inline-flex; align-items: center; gap: 6px;
-    }
-    .btn-blue { background: #2563eb; color: white; }
-    .btn-blue:hover { background: #1d4ed8; }
-    .btn-icon { width: 34px; height: 34px; border-radius: 8px; display: flex; align-items: center; justify-content: center; }
-    .btn-danger { background: #fef2f2; color: #dc2626; }
-    .btn-danger:hover { background: #fee2e2; }
-    .btn-green { background: #059669; color: white; }
-    .btn-green:hover { background: #047857; }
+.sb-nav{padding:.7rem .65rem;flex:1;overflow-y:auto}
+.sb-section{
+  font-size:.6rem;font-weight:800;color:var(--slate-300);
+  text-transform:uppercase;letter-spacing:.1em;
+  padding:.4rem .6rem .25rem;margin-top:.3rem;
+}
+.sb-item{
+  display:flex;align-items:center;gap:10px;
+  padding:.62rem .8rem;border-radius:var(--r-sm);
+  font-size:.83rem;font-weight:500;color:var(--slate-500);
+  transition:all .15s;width:100%;text-align:left;background:transparent;
+  margin-bottom:2px;
+}
+.sb-item:hover{background:var(--slate-50);color:var(--slate-700)}
+.sb-item.on{
+  background:var(--indigo-light);color:var(--indigo);
+  font-weight:700;
+}
+.sb-item.on .sb-dot-nav{background:var(--indigo)}
+.sb-item svg{width:16px;height:16px;flex-shrink:0}
 
-    .list-item {
-      display: flex; justify-content: space-between; align-items: center;
-      padding: .85rem 0; border-bottom: 1px solid #f8fafc;
-    }
-    .list-item:last-child { border-bottom: none; }
+.sb-footer{
+  padding:.75rem .65rem;
+  border-top:1px solid var(--slate-150);
+}
+.sb-user{
+  display:flex;align-items:center;gap:9px;
+  padding:.65rem .8rem;border-radius:var(--r-sm);
+  background:var(--indigo-light);margin-bottom:8px;
+  border:1px solid var(--indigo-mid);
+}
+.sb-avatar{
+  width:33px;height:33px;border-radius:50%;flex-shrink:0;
+  background:linear-gradient(135deg,var(--indigo),var(--violet));
+  display:flex;align-items:center;justify-content:center;
+  color:var(--white);font-weight:800;font-size:.82rem;
+}
+.sb-uname{font-size:.78rem;font-weight:700;color:var(--slate-800);line-height:1.2}
+.sb-uemail{font-size:.63rem;color:var(--slate-400);max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sb-logout{
+  width:100%;padding:.52rem;border-radius:var(--r-xs);
+  background:var(--rose-light);color:var(--rose);
+  font-size:.78rem;font-weight:700;transition:all .15s;
+  display:flex;align-items:center;justify-content:center;gap:6px;
+}
+.sb-logout:hover{background:var(--rose-mid)}
 
-    .barang-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1rem; }
-    .barang-card { background: white; border-radius: 14px; padding: 1.1rem; border: 1.5px solid #f1f5f9; transition: all .15s; }
-    .barang-card:hover { border-color: #bfdbfe; box-shadow: 0 4px 16px rgba(37,99,235,0.07); }
+/* Main content area */
+.main{
+  flex:1;margin-left:228px;
+  padding:1.75rem 1.5rem 5rem;
+  min-height:100dvh;
+}
 
-    .stok-badge {
-      padding: .25rem .65rem; border-radius: 999px; font-size: .7rem; font-weight: 700;
-    }
-    .stok-ok { background: #dcfce7; color: #15803d; }
-    .stok-low { background: #fff7ed; color: #c2410c; }
-    .stok-empty { background: #fef2f2; color: #dc2626; }
+.pg-head{margin-bottom:1.6rem}
+.pg-head h2{
+  font-size:1.55rem;font-weight:800;color:var(--slate-900);
+  letter-spacing:-.03em;line-height:1.2;
+}
+.pg-head p{color:var(--slate-400);font-size:.82rem;margin-top:.2rem}
 
-    .kasir-item {
-      padding: .85rem; border: 1.5px solid #f1f5f9; border-radius: 12px;
-      cursor: pointer; transition: all .15s; background: white;
-    }
-    .kasir-item:hover { border-color: #bfdbfe; background: #f8faff; }
-    .kasir-item.selected { border-color: #059669; background: #f0fdf4; }
-    .kasir-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: .75rem; }
+/* ── Mobile header ─────────────────────────────── */
+.mob-header{
+  display:none;
+  position:sticky;top:0;z-index:40;
+  background:rgba(255,255,255,.92);
+  backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--slate-150);
+  padding:.8rem 1rem;padding-top:calc(.8rem + var(--safe-top));
+  align-items:center;justify-content:space-between;
+}
+.mob-brand{
+  display:flex;align-items:center;gap:9px;
+  font-size:1.05rem;font-weight:800;letter-spacing:-.02em;
+  background:linear-gradient(135deg,var(--indigo-dark),var(--violet));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+}
+.mob-brand-icon{
+  width:32px;height:32px;border-radius:9px;
+  background:linear-gradient(135deg,var(--indigo),var(--violet));
+  display:flex;align-items:center;justify-content:center;font-size:15px;
+  box-shadow:var(--sh-indigo);
+}
+.mob-right{display:flex;align-items:center;gap:8px}
+.mob-logout{
+  background:var(--rose-light);color:var(--rose);
+  border-radius:var(--r-xs);padding:.38rem .7rem;
+  font-size:.72rem;font-weight:800;
+}
+.mob-sync{
+  display:flex;align-items:center;gap:4px;
+  padding:.35rem .65rem;border-radius:var(--r-xs);
+  background:var(--emerald-light);
+  border:1px solid var(--emerald-mid);
+}
+.mob-sync-dot{width:6px;height:6px;border-radius:50%;background:#22c55e}
+.mob-sync span{font-size:.66rem;font-weight:700;color:var(--emerald)}
 
-    .qty-control { display: flex; align-items: center; border: 1.5px solid #e2e8f0; border-radius: 10px; overflow: hidden; }
-    .qty-btn { background: #f8fafc; padding: .6rem 1rem; font-size: 1.1rem; font-weight: 700; color: #475569; transition: all .1s; }
-    .qty-btn:hover { background: #f1f5f9; }
-    .qty-input { border: none; text-align: center; width: 70px; font-size: 1.2rem; font-weight: 800; outline: none; color: #1e293b; padding: .4rem; }
+/* ── Bottom nav ────────────────────────────────── */
+.bot-nav{
+  display:none;
+  position:fixed;bottom:0;left:0;right:0;z-index:50;
+  background:rgba(255,255,255,.96);
+  backdrop-filter:blur(14px);
+  -webkit-backdrop-filter:blur(14px);
+  border-top:1px solid var(--slate-150);
+  padding:.35rem 0 calc(.35rem + var(--safe-bottom));
+  box-shadow:0 -4px 20px rgba(0,0,0,.08);
+}
+.bot-nav ul{display:flex;justify-content:space-around;list-style:none}
+.bot-item{
+  display:flex;flex-direction:column;align-items:center;gap:3px;
+  padding:.4rem .6rem;border-radius:var(--r-sm);
+  font-size:.58rem;font-weight:600;color:var(--slate-400);
+  background:transparent;transition:all .15s;min-width:55px;
+  position:relative;
+}
+.bot-item svg{width:22px;height:22px;transition:transform .2s}
+.bot-item.on{color:var(--indigo)}
+.bot-item.on svg{transform:scale(1.1)}
+.bot-item.on::before{
+  content:'';
+  position:absolute;top:4px;left:50%;transform:translateX(-50%);
+  width:28px;height:28px;border-radius:var(--r-xs);
+  background:var(--indigo-light);z-index:-1;
+}
 
-    .toast {
-      position: fixed; top: 1rem; right: 1rem; z-index: 9999;
-      padding: .8rem 1.25rem; border-radius: 12px; font-weight: 600; font-size: .875rem;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.15);
-      display: flex; align-items: center; gap: 8px;
-    }
-    .toast-success { background: #059669; color: white; }
-    .toast-error { background: #dc2626; color: white; }
+@media(max-width:768px){
+  .sidebar{display:none}
+  .main{margin-left:0;padding:.9rem .85rem 5.5rem}
+  .mob-header{display:flex}
+  .bot-nav{display:block}
+  .pg-head{margin-bottom:1.2rem}
+  .pg-head h2{font-size:1.3rem}
+}
 
-    .loading-screen {
-      min-height: 100vh; display: flex; flex-direction: column;
-      align-items: center; justify-content: center; gap: 1rem;
-    }
-    .spinner-ring {
-      width: 48px; height: 48px; border: 4px solid #e2e8f0;
-      border-top-color: #2563eb; border-radius: 50%;
-    }
+/* ══════════════════════════════════════════════════
+   CARDS & COMPONENTS
+══════════════════════════════════════════════════ */
+.card{
+  background:var(--white);border-radius:var(--r-lg);
+  border:1px solid var(--slate-150);padding:1.15rem;
+  box-shadow:var(--sh-xs);
+}
+.card-title{
+  font-size:.88rem;font-weight:700;color:var(--slate-800);
+  margin-bottom:.95rem;display:flex;align-items:center;gap:9px;
+}
+.card+.card{margin-top:.85rem}
 
-    .setoran-card { background: white; border-radius: 16px; border: 1px solid #f1f5f9; overflow: hidden; margin-bottom: 1rem; }
-    .setoran-header { background: #f8fafc; padding: 1rem 1.25rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; }
-    .setoran-body { padding: 1rem 1.25rem; }
-    .setoran-row { display: flex; justify-content: space-between; font-size: .875rem; padding: .3rem 0; }
+/* Hero gradient card */
+.hero-card{
+  background:linear-gradient(140deg,#312e81 0%,#4338ca 45%,#6d28d9 100%);
+  border-radius:var(--r-xl);padding:1.4rem 1.3rem;color:var(--white);
+  margin-bottom:1rem;position:relative;overflow:hidden;
+  box-shadow:0 10px 30px rgba(79,70,229,.35);
+}
+.hero-card::before{
+  content:'';position:absolute;top:-60px;right:-60px;
+  width:200px;height:200px;border-radius:50%;
+  background:rgba(255,255,255,.06);
+}
+.hero-card::after{
+  content:'';position:absolute;bottom:-40px;left:20px;
+  width:130px;height:130px;border-radius:50%;
+  background:rgba(255,255,255,.04);
+}
+.hero-label{
+  font-size:.66rem;font-weight:700;opacity:.65;
+  text-transform:uppercase;letter-spacing:.1em;
+}
+.hero-title{font-size:.95rem;font-weight:700;margin-top:.15rem;opacity:.88}
+.hero-grid{
+  display:grid;grid-template-columns:1fr 1fr;
+  gap:.8rem;margin-top:1.1rem;position:relative;z-index:1;
+}
+.hero-stat{
+  background:rgba(255,255,255,.13);border-radius:var(--r-sm);
+  padding:1rem;backdrop-filter:blur(8px);
+  border:1px solid rgba(255,255,255,.12);
+}
+.hero-stat-l{font-size:.62rem;font-weight:700;opacity:.65;text-transform:uppercase;letter-spacing:.07em}
+.hero-stat-v{font-size:1.25rem;font-weight:800;margin-top:.25rem;letter-spacing:-.02em;line-height:1}
 
-    .empty-state { text-align: center; padding: 3rem 1rem; color: #94a3b8; }
-    .empty-state svg { width: 48px; height: 48px; margin: 0 auto 1rem; opacity: .4; }
-    .empty-state p { font-weight: 500; }
-    .empty-state span { font-size: .8rem; margin-top: .25rem; display: block; }
-  </style>
+/* Stat row */
+.stat-row{display:grid;grid-template-columns:repeat(3,1fr);gap:.75rem;margin-bottom:1rem}
+.stat-c{
+  background:var(--white);border-radius:var(--r-lg);
+  border:1px solid var(--slate-150);padding:1rem .85rem;
+  box-shadow:var(--sh-xs);text-align:center;
+}
+.stat-emoji{font-size:1.5rem;margin-bottom:.4rem;line-height:1}
+.stat-val{
+  font-size:1.4rem;font-weight:800;
+  color:var(--slate-900);letter-spacing:-.03em;
+  display:flex;align-items:center;justify-content:center;
+  min-height:1.8rem;
+}
+.stat-lbl{font-size:.67rem;color:var(--slate-400);font-weight:600;margin-top:.15rem;letter-spacing:.01em}
+
+/* Buttons */
+.btn{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:.62rem 1.15rem;border-radius:var(--r-sm);
+  font-weight:700;font-size:.83rem;transition:all .15s;
+}
+.btn:active{transform:scale(.97)}
+.btn-blue{background:var(--indigo);color:var(--white);box-shadow:var(--sh-indigo)}
+.btn-blue:hover{background:var(--indigo-dark)}
+.btn-green{background:var(--emerald);color:var(--white);box-shadow:0 4px 14px rgba(5,150,105,.28)}
+.btn-green:hover{background:#047857}
+.btn-red{background:var(--rose-light);color:var(--rose)}
+.btn-red:hover{background:var(--rose-mid)}
+.btn-sm{padding:.42rem .8rem;font-size:.77rem;border-radius:var(--r-xs)}
+.btn-icon{
+  width:33px;height:33px;border-radius:var(--r-xs);
+  display:flex;align-items:center;justify-content:center;padding:0;flex-shrink:0;
+}
+.btn-icon svg{width:14px;height:14px}
+.btn:disabled{opacity:.55;cursor:not-allowed;transform:none;box-shadow:none}
+.btn-full{width:100%;justify-content:center;padding:.86rem}
+
+/* List items */
+.list-row{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:.82rem 0;border-bottom:1px solid var(--slate-100);
+}
+.list-row:last-child{border-bottom:none;padding-bottom:0}
+.list-row:first-child{padding-top:0}
+
+/* Badges */
+.badge{padding:.22rem .62rem;border-radius:999px;font-size:.67rem;font-weight:800;letter-spacing:.01em}
+.badge-green{background:var(--emerald-mid);color:#065f46}
+.badge-orange{background:var(--amber-mid);color:#92400e}
+.badge-red{background:var(--rose-mid);color:#9f1239}
+
+/* Barang grid */
+.barang-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:.75rem}
+@media(max-width:500px){.barang-grid{grid-template-columns:1fr 1fr}}
+.barang-card{
+  background:var(--white);border-radius:var(--r-lg);
+  border:1.5px solid var(--slate-150);padding:1rem;
+  transition:border-color .15s,box-shadow .15s;
+}
+.barang-card:hover{border-color:var(--indigo-mid);box-shadow:var(--sh)}
+
+/* Kasir grid */
+.kasir-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:.65rem}
+@media(max-width:400px){.kasir-grid{grid-template-columns:1fr 1fr}}
+.kasir-tile{
+  padding:.9rem .8rem;border:1.5px solid var(--slate-150);border-radius:var(--r);
+  cursor:pointer;transition:all .15s;background:var(--white);text-align:left;
+  position:relative;overflow:hidden;
+}
+.kasir-tile:active{transform:scale(.97)}
+.kasir-tile.sel{border-color:var(--emerald);background:var(--emerald-light)}
+.kasir-tile:not(.sel):hover{border-color:var(--indigo-mid);background:var(--indigo-light)}
+
+/* Qty control */
+.qty-wrap{
+  display:flex;align-items:center;
+  border:1.5px solid var(--slate-200);border-radius:var(--r-sm);overflow:hidden;
+}
+.qty-btn{
+  background:var(--slate-50);padding:.7rem 1.2rem;
+  font-size:1.3rem;font-weight:700;color:var(--slate-600);
+  transition:background .1s;
+}
+.qty-btn:hover{background:var(--slate-100)}
+.qty-num{
+  flex:1;text-align:center;font-size:1.35rem;font-weight:800;
+  border:none;padding:.4rem 0;color:var(--slate-900);background:var(--white);
+}
+
+/* Toast */
+.toast{
+  position:fixed;top:1rem;right:1rem;left:1rem;z-index:9999;
+  max-width:380px;margin:0 auto;
+  padding:.85rem 1.1rem;border-radius:var(--r);
+  font-weight:700;font-size:.83rem;
+  box-shadow:var(--sh-lg);
+  display:flex;align-items:center;gap:9px;
+  animation:slideDown .25s ease;
+}
+@media(min-width:480px){.toast{left:auto;right:1rem;max-width:340px;margin:0}}
+.toast-ok{background:linear-gradient(135deg,#065f46,#059669);color:var(--white)}
+.toast-err{background:linear-gradient(135deg,#9f1239,#e11d48);color:var(--white)}
+
+/* Mini spinner — icon-size only, not full screen */
+.mini-spin{
+  width:14px;height:14px;
+  border:2px solid rgba(99,102,241,.2);
+  border-top-color:var(--indigo);
+  border-radius:50%;flex-shrink:0;
+  display:inline-block;
+  animation:spin .6s linear infinite;
+}
+.mini-spin-green{
+  width:14px;height:14px;
+  border:2px solid rgba(5,150,105,.2);
+  border-top-color:var(--emerald);
+  border-radius:50%;flex-shrink:0;
+  display:inline-block;
+  animation:spin .6s linear infinite;
+}
+.mini-spin-white{
+  width:14px;height:14px;
+  border:2px solid rgba(255,255,255,.3);
+  border-top-color:#fff;
+  border-radius:50%;flex-shrink:0;
+  display:inline-block;
+  animation:spin .6s linear infinite;
+}
+
+/* Inline loading row */
+.loading-row{
+  display:flex;align-items:center;gap:6px;
+  color:var(--slate-400);font-size:.78rem;
+}
+
+/* Skeleton lines */
+.skel-line{height:13px;border-radius:6px;margin-bottom:8px}
+.skel-sm{width:60%}
+.skel-full{width:100%}
+.skel-block{height:74px;border-radius:var(--r);margin-bottom:.65rem}
+
+/* Empty state */
+.empty{text-align:center;padding:2.5rem 1rem;color:var(--slate-400)}
+.empty-icon{font-size:2.6rem;margin-bottom:.7rem;opacity:.45}
+.empty p{font-weight:700;font-size:.9rem;color:var(--slate-500)}
+.empty span{font-size:.77rem;margin-top:.3rem;display:block;color:var(--slate-300)}
+
+/* Setoran card */
+.setor-card{
+  background:var(--white);border-radius:var(--r-lg);
+  border:1px solid var(--slate-150);overflow:hidden;margin-bottom:.75rem;
+  box-shadow:var(--sh-xs);
+}
+.setor-head{
+  background:linear-gradient(135deg,var(--indigo-light),var(--violet-light));
+  padding:.95rem 1.1rem;display:flex;justify-content:space-between;align-items:center;
+  border-bottom:1px solid var(--indigo-mid);
+}
+.setor-body{padding:.9rem 1.1rem}
+.setor-row{display:flex;justify-content:space-between;font-size:.82rem;padding:.28rem 0}
+
+/* Section sub-label */
+.sec-badge{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:22px;height:22px;border-radius:999px;
+  font-size:.72rem;font-weight:800;flex-shrink:0;
+}
+
+/* Divider */
+.divider{border:none;border-top:1px solid var(--slate-100);margin:.9rem 0}
+
+/* Forms */
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:.7rem}
+.frow-3{display:grid;grid-template-columns:repeat(3,1fr);gap:.7rem}
+@media(max-width:500px){.frow{grid-template-columns:1fr}.frow-3{grid-template-columns:1fr 1fr}}
+
+/* ── Tip chip (desktop sidebar connection badge) */
+.conn-chip{
+  display:inline-flex;align-items:center;gap:5px;
+  background:var(--emerald-light);border:1px solid var(--emerald-mid);
+  color:var(--emerald);padding:.22rem .6rem;border-radius:999px;
+  font-size:.63rem;font-weight:700;margin-top:.5rem;
+}
+</style>
 </head>
 <body>
 <div id="root"></div>
 
 <script type="text/babel">
-// ⚙️ GANTI DENGAN URL WEB APP GOOGLE APPS SCRIPT ANDA
+// ── CONFIG ─────────────────────────────────────────────────────
 const GAS_URL = 'https://script.google.com/macros/s/AKfycbzSD2CtUcW1Ry9iaI_sPfwwNShGy8iE-qh0Ph9KDHnFlfc1xq_wtE_TjPhkX1Zn7EehBg/exec';
 
-// ============================================================
-// API HELPER
-// ============================================================
+// ── API ─────────────────────────────────────────────────────────
 async function api(payload) {
-  const token = localStorage.getItem('titipku_token');
+  const token = localStorage.getItem('tk_token');
   if (token && !payload.token) payload.token = token;
-  const res = await fetch(GAS_URL, {
-    method: 'POST',
-    body: JSON.stringify(payload),
-    headers: { 'Content-Type': 'text/plain' } // GAS tidak support application/json dari browser langsung
-  });
-  return await res.json();
+  const r = await fetch(GAS_URL, { method:'POST', body:JSON.stringify(payload), headers:{'Content-Type':'text/plain'} });
+  return r.json();
 }
 
-// ============================================================
-// ICONS (SVG inline)
-// ============================================================
-const Icon = {
-  Home: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>,
-  Users: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>,
-  Package: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="16.5" y1="9.4" x2="7.5" y2="4.21"/><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>,
-  Cart: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>,
-  Wallet: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4z"/></svg>,
-  Plus: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>,
-  Trash: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>,
-  Check: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>,
-  Alert: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>,
-  Trend: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>,
-  Logout: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>,
-  Cloud: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg>,
+// ── ICONS ───────────────────────────────────────────────────────
+const IC = {
+  Home:    ()=><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>,
+  Users:   ()=><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>,
+  Package: ()=><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="16.5" y1="9.4" x2="7.5" y2="4.21"/><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>,
+  Cart:    ()=><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>,
+  Wallet:  ()=><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4z"/></svg>,
+  Plus:    ()=><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>,
+  Trash:   ()=><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>,
+  Check:   ()=><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>,
+  Alert:   ()=><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>,
+  Trend:   ()=><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>,
+  Logout:  ()=><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>,
+  Cloud:   ()=><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg>,
+  Down:    ()=><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>,
+  X:       ()=><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>,
+  Download:()=><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>,
 };
 
-// ============================================================
-// HELPER
-// ============================================================
-const formatRp = (n) => new Intl.NumberFormat('id-ID', { style:'currency', currency:'IDR', maximumFractionDigits:0 }).format(n || 0);
+const formatRp = n => new Intl.NumberFormat('id-ID',{style:'currency',currency:'IDR',maximumFractionDigits:0}).format(n||0);
 
-// ============================================================
-// AUTH PAGE
-// ============================================================
-function AuthPage({ onLogin }) {
-  const [tab, setTab] = React.useState('login');
-  const [form, setForm] = React.useState({ email:'', password:'', nama:'' });
-  const [loading, setLoading] = React.useState(false);
-  const [error, setError] = React.useState('');
+// ── MINI SPINNER — inline icon only ────────────────────────────
+function MiniSpin({color}){
+  const cls = color==='green'?'mini-spin-green':color==='white'?'mini-spin-white':'mini-spin';
+  return <span className={cls}/>;
+}
 
-  const handle = async () => {
-    setError(''); setLoading(true);
-    try {
-      const action = tab === 'login' ? 'login' : 'register';
-      const res = await api({ action, ...form });
-      if (res.success) {
-        localStorage.setItem('titipku_token', res.token);
-        localStorage.setItem('titipku_user', JSON.stringify(res.user));
-        onLogin(res.user);
-      } else {
-        setError(res.error || 'Terjadi kesalahan.');
-      }
-    } catch (e) {
-      setError('Tidak dapat terhubung ke server. Cek koneksi internet Anda.');
-    }
-    setLoading(false);
-  };
-
+// ── SKELETON LOADER ─────────────────────────────────────────────
+function SkeletonList(){
   return (
-    <div className="auth-bg">
-      <div className="auth-card animate-fade-in">
-        <div className="auth-logo">
-          <div className="auth-logo-icon">📦</div>
-          <h1>TitipKu</h1>
-        </div>
-        <div className="auth-title">
-          <h2>{tab === 'login' ? 'Selamat Datang Kembali' : 'Buat Akun Baru'}</h2>
-          <p>{tab === 'login' ? 'Login untuk akses data titipan Anda' : 'Daftar gratis, mulai kelola titipan'}</p>
-        </div>
-
-        <div className="auth-tabs">
-          <button className={`auth-tab ${tab === 'login' ? 'active' : ''}`} onClick={() => { setTab('login'); setError(''); }}>Masuk</button>
-          <button className={`auth-tab ${tab === 'register' ? 'active' : ''}`} onClick={() => { setTab('register'); setError(''); }}>Daftar</button>
-        </div>
-
-        {error && <div className="error-box">⚠️ {error}</div>}
-
-        {tab === 'register' && (
-          <div className="form-group">
-            <label>Nama Toko / Nama Anda</label>
-            <input className="form-control" placeholder="Cth: Warung Bu Sari" value={form.nama} onChange={e => setForm({...form, nama: e.target.value})} />
+    <div>
+      {[1,2,3].map(i=>(
+        <div key={i} style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'.8rem 0',borderBottom:'1px solid #f8fafc'}}>
+          <div style={{flex:1}}>
+            <div className="skeleton skel-line skel-sm" style={{width:'55%'}}/>
+            <div className="skeleton skel-line" style={{width:'35%',height:10,marginTop:6,marginBottom:0}}/>
           </div>
-        )}
-        <div className="form-group">
-          <label>Email</label>
-          <input className="form-control" type="email" placeholder="email@contoh.com" value={form.email} onChange={e => setForm({...form, email: e.target.value})} />
+          <div className="skeleton" style={{width:32,height:32,borderRadius:8}}/>
         </div>
-        <div className="form-group">
-          <label>Password</label>
-          <input className="form-control" type="password" placeholder={tab === 'register' ? 'Minimal 6 karakter' : '••••••••'} value={form.password}
-            onChange={e => setForm({...form, password: e.target.value})}
-            onKeyDown={e => e.key === 'Enter' && handle()} />
+      ))}
+    </div>
+  );
+}
+
+function SkeletonCard(){
+  return (
+    <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'.75rem',marginBottom:'.75rem'}}>
+      {[1,2,3,4].map(i=><div key={i} className="skeleton skel-block" style={{height:90}}/>)}
+    </div>
+  );
+}
+
+// ── PWA BANNER ──────────────────────────────────────────────────
+function PwaBanner(){
+  const [prompt, setPrompt] = React.useState(null);
+  const [show, setShow] = React.useState(false);
+
+  React.useEffect(()=>{
+    const dismissed = sessionStorage.getItem('pwa_dismissed');
+    if(dismissed) return;
+    const handler = e => { e.preventDefault(); setPrompt(e); setShow(true); };
+    window.addEventListener('beforeinstallprompt', handler);
+    return ()=>window.removeEventListener('beforeinstallprompt', handler);
+  },[]);
+
+  const install = async()=>{
+    if(!prompt) return;
+    await prompt.prompt();
+    const r = await prompt.userChoice;
+    if(r.outcome==='accepted') setShow(false);
+  };
+  const dismiss = ()=>{ setShow(false); sessionStorage.setItem('pwa_dismissed','1'); };
+
+  if(!show) return null;
+  return (
+    <div className="pwa-banner pop-in">
+      <div className="pwa-inner">
+        <div className="pwa-app-icon">📦</div>
+        <div className="pwa-info">
+          <strong>Pasang TitipKu di HP kamu</strong>
+          <span>Akses cepat langsung dari layar utama</span>
         </div>
-        <button className="btn-primary" onClick={handle} disabled={loading}>
-          {loading ? '⏳ Memproses...' : (tab === 'login' ? '🚀 Masuk' : '✨ Buat Akun')}
-        </button>
+        <div className="pwa-actions">
+          <button className="pwa-install" onClick={install}>
+            <IC.Download/> Pasang
+          </button>
+          <button className="pwa-dismiss" onClick={dismiss}><IC.X/></button>
+        </div>
       </div>
     </div>
   );
 }
 
-// ============================================================
-// MAIN APP
-// ============================================================
-function App() {
-  const [user, setUser] = React.useState(() => {
-    try { return JSON.parse(localStorage.getItem('titipku_user')); } catch { return null; }
-  });
-  const [activeTab, setActiveTab] = React.useState('beranda');
-  const [penitip, setPenitip] = React.useState([]);
-  const [barang, setBarang] = React.useState([]);
-  const [penjualan, setPenjualan] = React.useState([]);
-  const [loading, setLoading] = React.useState(false);
-  const [notif, setNotif] = React.useState(null);
+// ══════════════════════════════════════════════════
+// AUTH PAGE
+// ══════════════════════════════════════════════════
+function AuthPage({onLogin}){
+  const [tab,setTab] = React.useState('login');
+  const [form,setForm] = React.useState({email:'',password:'',nama:''});
+  const [loading,setLoading] = React.useState(false);
+  const [err,setErr] = React.useState('');
 
-  const showNotif = (pesan, tipe = 'success') => {
-    setNotif({ pesan, tipe });
-    setTimeout(() => setNotif(null), 3000);
-  };
-
-  const logout = () => {
-    localStorage.removeItem('titipku_token');
-    localStorage.removeItem('titipku_user');
-    setUser(null);
-  };
-
-  // Fetch all data when user logs in
-  React.useEffect(() => {
-    if (!user) return;
-    fetchAll();
-  }, [user]);
-
-  const fetchAll = async () => {
-    setLoading(true);
-    try {
-      const [rP, rB, rJ] = await Promise.all([
-        api({ action: 'getPenitip' }),
-        api({ action: 'getBarang' }),
-        api({ action: 'getPenjualan' }),
-      ]);
-      if (rP.success) setPenitip(rP.data);
-      if (rB.success) setBarang(rB.data);
-      if (rJ.success) setPenjualan(rJ.data);
-    } catch (e) {
-      showNotif('Gagal memuat data. Cek koneksi.', 'error');
-    }
+  const go = async()=>{
+    setErr(''); setLoading(true);
+    try{
+      const res = await api({action: tab==='login'?'login':'register', ...form});
+      if(res.success){
+        localStorage.setItem('tk_token', res.token);
+        localStorage.setItem('tk_user', JSON.stringify(res.user));
+        onLogin(res.user);
+      } else setErr(res.error||'Terjadi kesalahan.');
+    } catch{ setErr('Tidak dapat terhubung. Cek koneksi internet.'); }
     setLoading(false);
   };
 
-  if (!user) return <AuthPage onLogin={(u) => setUser(u)} />;
-  if (loading && penitip.length === 0) return (
-    <div className="loading-screen">
-      <div className="spinner-ring spinner"></div>
-      <p style={{color:'#64748b',fontWeight:600}}>Memuat data dari Spreadsheet...</p>
+  return (
+    <div className="auth-wrap">
+      <div className="auth-orb auth-orb-1"/>
+      <div className="auth-orb auth-orb-2"/>
+      <div className="auth-orb auth-orb-3"/>
+      <div className="auth-card">
+        <div className="auth-brand">
+          <div className="auth-icon">📦</div>
+          <h1>TitipKu</h1>
+        </div>
+        <div className="auth-sub">
+          <h2>{tab==='login'?'Selamat Datang 👋':'Buat Akun Baru ✨'}</h2>
+          <p>{tab==='login'?'Masuk untuk kelola titipan Anda':'Daftar gratis, mulai sekarang'}</p>
+        </div>
+
+        <div className="seg">
+          <button className={`seg-btn ${tab==='login'?'on':''}`} onClick={()=>{setTab('login');setErr('')}}>Masuk</button>
+          <button className={`seg-btn ${tab==='register'?'on':''}`} onClick={()=>{setTab('register');setErr('')}}>Daftar</button>
+        </div>
+
+        {err&&<div className="err-box"><IC.Alert/>{err}</div>}
+
+        {tab==='register'&&(
+          <div className="fgrp">
+            <label>Nama Toko / Nama Anda</label>
+            <input className="finput" placeholder="Cth: Warung Bu Sari" value={form.nama} onChange={e=>setForm({...form,nama:e.target.value})}/>
+          </div>
+        )}
+        <div className="fgrp">
+          <label>Email</label>
+          <input className="finput" type="email" placeholder="email@contoh.com" value={form.email} onChange={e=>setForm({...form,email:e.target.value})}/>
+        </div>
+        <div className="fgrp">
+          <label>Password</label>
+          <input className="finput" type="password" placeholder={tab==='register'?'Minimal 6 karakter':'••••••••'} value={form.password}
+            onChange={e=>setForm({...form,password:e.target.value})} onKeyDown={e=>e.key==='Enter'&&go()}/>
+        </div>
+        <button className="btn-auth" onClick={go} disabled={loading}>
+          {loading
+            ? <span style={{display:'flex',alignItems:'center',justifyContent:'center',gap:8}}>
+                <MiniSpin color="white"/> Memproses…
+              </span>
+            : (tab==='login'?'🚀 Masuk':'✨ Buat Akun')}
+        </button>
+      </div>
+      <PwaBanner/>
     </div>
   );
+}
 
-  const navItems = [
-    { id: 'beranda', label: 'Beranda', Icon: Icon.Home },
-    { id: 'penitip', label: 'Penitip', Icon: Icon.Users },
-    { id: 'barang',  label: 'Barang',  Icon: Icon.Package },
-    { id: 'kasir',   label: 'Kasir',   Icon: Icon.Cart },
-    { id: 'setoran', label: 'Setoran', Icon: Icon.Wallet },
+// ══════════════════════════════════════════════════
+// MAIN APP
+// ══════════════════════════════════════════════════
+function App(){
+  const [user,setUser] = React.useState(()=>{ try{ return JSON.parse(localStorage.getItem('tk_user')); }catch{return null;} });
+  const [tab,setTab] = React.useState('beranda');
+  const [penitip,setPenitip] = React.useState([]);
+  const [barang,setBarang] = React.useState([]);
+  const [penjualan,setPenjualan] = React.useState([]);
+  const [loading,setLoading] = React.useState(false);
+  const [toast,setToast] = React.useState(null);
+
+  const notif = (msg,type='ok')=>{ setToast({msg,type}); setTimeout(()=>setToast(null),3200); };
+  const logout = ()=>{ localStorage.removeItem('tk_token'); localStorage.removeItem('tk_user'); setUser(null); };
+
+  React.useEffect(()=>{ if(user) fetchAll(); },[user]);
+
+  const fetchAll = async()=>{
+    setLoading(true);
+    try{
+      const [rP,rB,rJ] = await Promise.all([
+        api({action:'getPenitip'}), api({action:'getBarang'}), api({action:'getPenjualan'})
+      ]);
+      if(rP.success) setPenitip(rP.data);
+      if(rB.success) setBarang(rB.data);
+      if(rJ.success) setPenjualan(rJ.data);
+    } catch{ notif('Gagal memuat data','err'); }
+    setLoading(false);
+  };
+
+  if(!user) return <AuthPage onLogin={u=>setUser(u)}/>;
+
+  const navs = [
+    {id:'beranda',label:'Beranda',I:IC.Home},
+    {id:'penitip',label:'Penitip',I:IC.Users},
+    {id:'barang', label:'Barang', I:IC.Package},
+    {id:'kasir',  label:'Kasir',  I:IC.Cart},
+    {id:'setoran',label:'Setoran',I:IC.Wallet},
   ];
 
   return (
-    <div className="app-layout">
-      {/* Toast */}
-      {notif && (
-        <div className={`toast animate-slide-down ${notif.tipe === 'error' ? 'toast-error' : 'toast-success'}`}>
-          {notif.tipe === 'error' ? <Icon.Alert /> : <Icon.Check />}
-          {notif.pesan}
+    <div className="shell">
+      {toast&&(
+        <div className={`toast ${toast.type==='err'?'toast-err':'toast-ok'}`}>
+          {toast.type==='err'?<IC.Alert/>:<IC.Check/>}{toast.msg}
         </div>
       )}
 
       {/* SIDEBAR */}
       <aside className="sidebar">
-        <div className="sidebar-brand">
-          <h1>📦 TitipKu</h1>
-          <div className="sync-badge">
-            <span style={{width:7,height:7,borderRadius:'50%',background:'#22c55e',flexShrink:0}} className="pulse-dot"></span>
-            Spreadsheet Terhubung
+        <div className="sb-brand">
+          <div className="sb-logo">
+            <div className="sb-logo-icon">📦</div>
+            <h1>TitipKu</h1>
+          </div>
+          <div className="conn-chip">
+            <div className="sb-dot pulse-dot"/>
+            <IC.Cloud/> Spreadsheet terhubung
           </div>
         </div>
-        <nav className="nav-list">
-          {navItems.map(({ id, label, Icon: NavIcon }) => (
-            <button key={id} className={`nav-item ${activeTab === id ? 'active' : ''}`} onClick={() => setActiveTab(id)}>
-              <NavIcon /> {label}
+        <nav className="sb-nav">
+          <div className="sb-section">Menu Utama</div>
+          {navs.map(({id,label,I})=>(
+            <button key={id} className={`sb-item ${tab===id?'on':''}`} onClick={()=>setTab(id)}>
+              <I/>{label}
             </button>
           ))}
         </nav>
-        <div className="sidebar-footer">
-          <div className="user-info">
-            <div className="user-avatar">{user.nama?.[0]?.toUpperCase() || 'U'}</div>
-            <div>
-              <div className="user-name">{user.nama}</div>
-              <div className="user-email">{user.email}</div>
+        <div className="sb-footer">
+          <div className="sb-user">
+            <div className="sb-avatar">{user.nama?.[0]?.toUpperCase()||'U'}</div>
+            <div style={{minWidth:0}}>
+              <div className="sb-uname">{user.nama}</div>
+              <div className="sb-uemail">{user.email}</div>
             </div>
           </div>
-          <button className="btn-logout" onClick={logout}><Icon.Logout style={{width:14,height:14,display:'inline',marginRight:5}} />Keluar</button>
+          <button className="sb-logout" onClick={logout}><IC.Logout style={{width:13,height:13}}/>Keluar</button>
         </div>
       </aside>
 
       {/* MOBILE HEADER */}
-      <div className="mobile-header">
-        <span className="mobile-brand">📦 TitipKu</span>
-        <button style={{background:'#fef2f2',padding:'.4rem .75rem',borderRadius:8,fontSize:'.75rem',fontWeight:600,color:'#dc2626'}} onClick={logout}>Keluar</button>
+      <div className="mob-header">
+        <div className="mob-brand">
+          <div className="mob-brand-icon">📦</div>TitipKu
+        </div>
+        <div className="mob-right">
+          {loading
+            ? <div className="loading-row" style={{background:'var(--indigo-light)',borderRadius:'var(--r-xs)',padding:'.3rem .6rem',border:'1px solid var(--indigo-mid)'}}>
+                <MiniSpin/><span style={{fontSize:'.67rem',color:'var(--indigo)',fontWeight:600}}>Memuat</span>
+              </div>
+            : <div className="mob-sync">
+                <div className="mob-sync-dot pulse-dot"/>
+                <span>Live</span>
+              </div>
+          }
+          <button className="mob-logout" onClick={logout}>Keluar</button>
+        </div>
       </div>
 
       {/* MAIN */}
-      <main className="main-content">
-        {activeTab === 'beranda' && <PageBeranda penitip={penitip} barang={barang} penjualan={penjualan} user={user} />}
-        {activeTab === 'penitip' && <PagePenitip penitip={penitip} barang={barang} setPenitip={setPenitip} showNotif={showNotif} />}
-        {activeTab === 'barang'  && <PageBarang  penitip={penitip} barang={barang} setBarang={setBarang} showNotif={showNotif} />}
-        {activeTab === 'kasir'   && <PageKasir   barang={barang} penjualan={penjualan} setBarang={setBarang} setPenjualan={setPenjualan} showNotif={showNotif} />}
-        {activeTab === 'setoran' && <PageSetoran penitip={penitip} barang={barang} penjualan={penjualan} />}
+      <main className="main">
+        {tab==='beranda' && <PgBeranda penitip={penitip} barang={barang} penjualan={penjualan} user={user} loading={loading}/>}
+        {tab==='penitip' && <PgPenitip penitip={penitip} barang={barang} setPenitip={setPenitip} notif={notif} loading={loading}/>}
+        {tab==='barang'  && <PgBarang  penitip={penitip} barang={barang} setBarang={setBarang} notif={notif} loading={loading}/>}
+        {tab==='kasir'   && <PgKasir   barang={barang} penjualan={penjualan} setBarang={setBarang} setPenjualan={setPenjualan} notif={notif}/>}
+        {tab==='setoran' && <PgSetoran penitip={penitip} barang={barang} penjualan={penjualan} loading={loading}/>}
       </main>
 
       {/* BOTTOM NAV */}
-      <nav className="bottom-nav">
+      <nav className="bot-nav">
         <ul>
-          {navItems.map(({ id, label, Icon: NavIcon }) => (
+          {navs.map(({id,label,I})=>(
             <li key={id}>
-              <button className={`bottom-nav-item ${activeTab === id ? 'active' : ''}`} onClick={() => setActiveTab(id)}>
-                <NavIcon /> {label}
+              <button className={`bot-item ${tab===id?'on':''}`} onClick={()=>setTab(id)}>
+                <I/>{label}
               </button>
             </li>
           ))}
         </ul>
       </nav>
+      <PwaBanner/>
     </div>
   );
 }
 
-// ============================================================
-// PAGE: BERANDA
-// ============================================================
-function PageBeranda({ penitip, barang, penjualan, user }) {
-  const totalPenjualan = penjualan.reduce((t, p) => {
-    const b = barang.find(x => x.id === p.idBarang);
-    return t + (b ? b.hargaJual * p.qty : 0);
-  }, 0);
-  const keuntungan = penjualan.reduce((t, p) => {
-    const b = barang.find(x => x.id === p.idBarang);
-    return t + (b ? (b.hargaJual - b.hargaSetor) * p.qty : 0);
-  }, 0);
+// ══════════════════════════════════════════════════
+// BERANDA
+// ══════════════════════════════════════════════════
+function PgBeranda({penitip,barang,penjualan,user,loading}){
+  const omzet = penjualan.reduce((t,p)=>{ const b=barang.find(x=>x.id===p.idBarang); return t+(b?b.hargaJual*p.qty:0); },0);
+  const untung = penjualan.reduce((t,p)=>{ const b=barang.find(x=>x.id===p.idBarang); return t+(b?(b.hargaJual-b.hargaSetor)*p.qty:0); },0);
 
   return (
-    <div className="animate-fade-in">
-      <div className="page-header">
-        <h2>👋 Halo, {user.nama}!</h2>
-        <p>Pantau bisnis titip jualan Anda hari ini.</p>
+    <div className="fade-up">
+      <div className="pg-head">
+        <h2>Halo, {user.nama.split(' ')[0]} 👋</h2>
+        <p>Ringkasan bisnis titip jualan Anda</p>
       </div>
 
       <div className="hero-card">
-        <div style={{fontSize:'.8rem',opacity:.7,textTransform:'uppercase',letterSpacing:'.08em'}}>Ringkasan Bisnis</div>
-        <div style={{fontSize:'1rem',fontWeight:600,marginTop:4}}>Data tersimpan di Google Spreadsheet Anda</div>
+        <div className="hero-label">Performa Bisnis</div>
+        <div className="hero-title">Data real-time dari Spreadsheet</div>
         <div className="hero-grid">
           <div className="hero-stat">
-            <div className="hero-stat-label">Keuntungan Bersih</div>
-            <div className="hero-stat-value">{formatRp(keuntungan)}</div>
+            <div className="hero-stat-l">Keuntungan</div>
+            <div className="hero-stat-v">
+              {loading
+                ? <span style={{display:'flex',alignItems:'center',gap:6,opacity:.7,fontSize:'.85rem'}}>
+                    <MiniSpin color="white"/>Memuat…
+                  </span>
+                : formatRp(untung)}
+            </div>
           </div>
           <div className="hero-stat">
-            <div className="hero-stat-label">Omzet Kotor</div>
-            <div className="hero-stat-value">{formatRp(totalPenjualan)}</div>
+            <div className="hero-stat-l">Omzet</div>
+            <div className="hero-stat-v">
+              {loading
+                ? <span style={{display:'flex',alignItems:'center',gap:6,opacity:.7,fontSize:'.85rem'}}>
+                    <MiniSpin color="white"/>Memuat…
+                  </span>
+                : formatRp(omzet)}
+            </div>
           </div>
         </div>
       </div>
 
-      <div className="stat-grid" style={{gridTemplateColumns:'repeat(3,1fr)'}}>
-        <div className="stat-card">
-          <div className="stat-icon" style={{background:'#eff6ff'}}><span style={{fontSize:'1.3rem'}}>👥</span></div>
-          <div className="stat-label">Mitra Penitip</div>
-          <div className="stat-value">{penitip.length}</div>
+      <div className="stat-row">
+        <div className="stat-c">
+          <div className="stat-emoji">👥</div>
+          <div className="stat-val">{loading?<MiniSpin/>:penitip.length}</div>
+          <div className="stat-lbl">Penitip</div>
         </div>
-        <div className="stat-card">
-          <div className="stat-icon" style={{background:'#fff7ed'}}><span style={{fontSize:'1.3rem'}}>📦</span></div>
-          <div className="stat-label">Macam Barang</div>
-          <div className="stat-value">{barang.length}</div>
+        <div className="stat-c">
+          <div className="stat-emoji">📦</div>
+          <div className="stat-val">{loading?<MiniSpin/>:barang.length}</div>
+          <div className="stat-lbl">Barang</div>
         </div>
-        <div className="stat-card">
-          <div className="stat-icon" style={{background:'#f0fdf4'}}><span style={{fontSize:'1.3rem'}}>🛒</span></div>
-          <div className="stat-label">Total Transaksi</div>
-          <div className="stat-value">{penjualan.length}</div>
+        <div className="stat-c">
+          <div className="stat-emoji">🛒</div>
+          <div className="stat-val">{loading?<MiniSpin/>:penjualan.length}</div>
+          <div className="stat-lbl">Transaksi</div>
         </div>
       </div>
 
       <div className="card">
-        <div className="card-title">5 Penjualan Terakhir</div>
-        {penjualan.slice(0, 5).length === 0 ? (
-          <div className="empty-state"><Icon.Cart /><p>Belum ada penjualan</p><span>Catat penjualan di menu Kasir</span></div>
-        ) : penjualan.slice(0, 5).map(p => {
-          const b = barang.find(x => x.id === p.idBarang);
-          return (
-            <div key={p.id} className="list-item">
-              <div>
-                <div style={{fontWeight:600,fontSize:'.9rem'}}>{b ? b.nama : 'Barang dihapus'}</div>
-                <div style={{fontSize:'.75rem',color:'#94a3b8',marginTop:2}}>
-                  {new Date(p.tanggal).toLocaleString('id-ID', {day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})} • {p.qty} item
-                </div>
-              </div>
-              <div style={{fontWeight:700,color:'#059669'}}>{formatRp((b?.hargaJual || 0) * p.qty)}</div>
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
-// ============================================================
-// PAGE: PENITIP
-// ============================================================
-function PagePenitip({ penitip, barang, setPenitip, showNotif }) {
-  const [form, setForm] = React.useState({ nama: '', kontak: '' });
-  const [saving, setSaving] = React.useState(false);
-
-  const tambah = async () => {
-    if (!form.nama.trim()) return showNotif('Nama penitip wajib diisi.', 'error');
-    setSaving(true);
-    try {
-      const res = await api({ action: 'addPenitip', nama: form.nama.trim(), kontak: form.kontak.trim() });
-      if (res.success) {
-        setPenitip(prev => [...prev, res.data]);
-        setForm({ nama: '', kontak: '' });
-        showNotif('Penitip berhasil ditambahkan!');
-      } else showNotif(res.error, 'error');
-    } catch { showNotif('Gagal terhubung ke server.', 'error'); }
-    setSaving(false);
-  };
-
-  const hapus = async (id) => {
-    if (barang.some(b => b.idPenitip === id)) return showNotif('Gagal: Penitip masih memiliki barang!', 'error');
-    if (!confirm('Hapus penitip ini?')) return;
-    try {
-      const res = await api({ action: 'deletePenitip', id });
-      if (res.success) { setPenitip(prev => prev.filter(p => p.id !== id)); showNotif('Penitip dihapus.'); }
-      else showNotif(res.error, 'error');
-    } catch { showNotif('Gagal terhubung ke server.', 'error'); }
-  };
-
-  return (
-    <div className="animate-fade-in">
-      <div className="page-header"><h2>👥 Penitip</h2><p>Kelola mitra penitip barang Anda.</p></div>
-
-      <div className="card" style={{marginBottom:'1.5rem'}}>
-        <div className="card-title">Tambah Penitip Baru</div>
-        <div className="form-row" style={{marginBottom:'.75rem'}}>
-          <input className="input" placeholder="Nama Penitip *" value={form.nama} onChange={e => setForm({...form, nama: e.target.value})} />
-          <input className="input" placeholder="No. HP / WA (opsional)" value={form.kontak} onChange={e => setForm({...form, kontak: e.target.value})} onKeyDown={e => e.key === 'Enter' && tambah()} />
+        <div className="card-title" style={{justifyContent:'space-between'}}>
+          <span>Penjualan Terakhir</span>
+          {loading&&<div className="loading-row"><MiniSpin/><span>Memuat…</span></div>}
         </div>
-        <button className="btn btn-blue" onClick={tambah} disabled={saving}>
-          <Icon.Plus />{saving ? 'Menyimpan...' : 'Tambah Penitip'}
-        </button>
-      </div>
-
-      <div className="card">
-        <div className="card-title">Daftar Mitra ({penitip.length})</div>
-        {penitip.length === 0 ? (
-          <div className="empty-state"><Icon.Users /><p>Belum ada penitip</p><span>Tambah penitip pertama Anda di atas</span></div>
-        ) : penitip.map(p => (
-          <div key={p.id} className="list-item">
-            <div>
-              <div style={{fontWeight:600}}>{p.nama}</div>
-              <div style={{fontSize:'.8rem',color:'#94a3b8',marginTop:2}}>{p.kontak || 'Tidak ada kontak'}</div>
-            </div>
-            <button className="btn btn-icon btn-danger" onClick={() => hapus(p.id)}><Icon.Trash /></button>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-// ============================================================
-// PAGE: BARANG
-// ============================================================
-function PageBarang({ penitip, barang, setBarang, showNotif }) {
-  const [form, setForm] = React.useState({ idPenitip:'', nama:'', stok:'', hargaSetor:'', hargaJual:'' });
-  const [saving, setSaving] = React.useState(false);
-
-  const tambah = async () => {
-    if (!form.idPenitip || !form.nama || !form.hargaSetor || !form.hargaJual) return showNotif('Lengkapi semua field wajib.', 'error');
-    setSaving(true);
-    try {
-      const res = await api({ action: 'addBarang', ...form, stok: parseInt(form.stok)||0, hargaSetor: parseInt(form.hargaSetor), hargaJual: parseInt(form.hargaJual) });
-      if (res.success) {
-        setBarang(prev => [...prev, res.data]);
-        setForm({ idPenitip:'', nama:'', stok:'', hargaSetor:'', hargaJual:'' });
-        showNotif('Barang berhasil ditambahkan!');
-      } else showNotif(res.error, 'error');
-    } catch { showNotif('Gagal terhubung ke server.', 'error'); }
-    setSaving(false);
-  };
-
-  const hapus = async (id) => {
-    if (!confirm('Hapus barang ini?')) return;
-    try {
-      const res = await api({ action: 'deleteBarang', id });
-      if (res.success) { setBarang(prev => prev.filter(b => b.id !== id)); showNotif('Barang dihapus.'); }
-      else showNotif(res.error, 'error');
-    } catch { showNotif('Gagal terhubung ke server.', 'error'); }
-  };
-
-  return (
-    <div className="animate-fade-in">
-      <div className="page-header"><h2>📦 Barang</h2><p>Terima dan kelola barang titipan.</p></div>
-
-      <div className="card" style={{marginBottom:'1.5rem'}}>
-        <div className="card-title">Terima Barang Titipan</div>
-        <div className="form-row" style={{marginBottom:'.75rem'}}>
-          <select className="input" value={form.idPenitip} onChange={e => setForm({...form, idPenitip: e.target.value})}>
-            <option value="">-- Pilih Penitip *</option>
-            {penitip.map(p => <option key={p.id} value={p.id}>{p.nama}</option>)}
-          </select>
-          <input className="input" placeholder="Nama Barang *" value={form.nama} onChange={e => setForm({...form, nama: e.target.value})} />
-        </div>
-        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:'.75rem',marginBottom:'.75rem'}}>
-          <div>
-            <label style={{fontSize:'.75rem',color:'#64748b',fontWeight:600,display:'block',marginBottom:4}}>Stok Awal</label>
-            <input className="input" type="number" placeholder="0" min="0" value={form.stok} onChange={e => setForm({...form, stok: e.target.value})} />
-          </div>
-          <div>
-            <label style={{fontSize:'.75rem',color:'#64748b',fontWeight:600,display:'block',marginBottom:4}}>Harga Setor (Rp)</label>
-            <input className="input" type="number" placeholder="0" min="0" value={form.hargaSetor} onChange={e => setForm({...form, hargaSetor: e.target.value})} />
-          </div>
-          <div>
-            <label style={{fontSize:'.75rem',color:'#64748b',fontWeight:600,display:'block',marginBottom:4}}>Harga Jual (Rp)</label>
-            <input className="input" type="number" placeholder="0" min="0" value={form.hargaJual} onChange={e => setForm({...form, hargaJual: e.target.value})} />
-          </div>
-        </div>
-        <button className="btn btn-blue" onClick={tambah} disabled={saving}>
-          <Icon.Plus />{saving ? 'Menyimpan...' : 'Tambah Barang'}
-        </button>
-      </div>
-
-      {barang.length === 0 ? (
-        <div className="card"><div className="empty-state"><Icon.Package /><p>Belum ada barang</p><span>Tambah barang titipan di atas</span></div></div>
-      ) : (
-        <div className="barang-grid">
-          {barang.map(b => {
-            const pemilik = penitip.find(p => p.id === b.idPenitip);
-            const untung = b.hargaJual - b.hargaSetor;
-            const stokClass = b.stok > 5 ? 'stok-ok' : b.stok > 0 ? 'stok-low' : 'stok-empty';
+        {loading&&penjualan.length===0 ? <SkeletonList/> :
+          penjualan.length===0 ? (
+            <div className="empty"><div className="empty-icon">🛒</div><p>Belum ada penjualan</p><span>Catat di menu Kasir</span></div>
+          ) : penjualan.slice(0,5).map(p=>{
+            const b = barang.find(x=>x.id===p.idBarang);
             return (
-              <div key={b.id} className="barang-card">
-                <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:'.75rem'}}>
-                  <div style={{flex:1,minWidth:0}}>
-                    <div style={{fontWeight:700,fontSize:'.95rem',marginBottom:3}}>{b.nama}</div>
-                    <div style={{fontSize:'.75rem',color:'#94a3b8'}}>{pemilik?.nama || 'Penitip dihapus'}</div>
-                  </div>
-                  <span className={`stok-badge ${stokClass}`}>Stok: {b.stok}</span>
-                </div>
-                <div style={{background:'#f8fafc',borderRadius:10,padding:'.6rem .75rem',marginBottom:'.75rem',display:'flex',justifyContent:'space-between'}}>
-                  <div>
-                    <div style={{fontSize:'.7rem',color:'#94a3b8'}}>Setor</div>
-                    <div style={{fontWeight:600,fontSize:'.85rem'}}>{formatRp(b.hargaSetor)}</div>
-                  </div>
-                  <div style={{textAlign:'right'}}>
-                    <div style={{fontSize:'.7rem',color:'#94a3b8'}}>Jual</div>
-                    <div style={{fontWeight:700,color:'#2563eb',fontSize:'.85rem'}}>{formatRp(b.hargaJual)}</div>
+              <div key={p.id} className="list-row">
+                <div>
+                  <div style={{fontWeight:600,fontSize:'.875rem'}}>{b?b.nama:'Barang dihapus'}</div>
+                  <div style={{fontSize:'.72rem',color:'var(--slate-400)',marginTop:2}}>
+                    {new Date(p.tanggal).toLocaleString('id-ID',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})} · {p.qty} item
                   </div>
                 </div>
-                <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
-                  <span style={{fontSize:'.75rem',color:'#059669',fontWeight:600}}>+{formatRp(untung)}/pc</span>
-                  <button className="btn btn-icon btn-danger" style={{width:30,height:30}} onClick={() => hapus(b.id)}><Icon.Trash /></button>
-                </div>
+                <div style={{fontWeight:800,color:'var(--emerald)',fontSize:'.9rem'}}>{formatRp((b?.hargaJual||0)*p.qty)}</div>
               </div>
             );
-          })}
-        </div>
-      )}
+          })
+        }
+      </div>
     </div>
   );
 }
 
-// ============================================================
-// PAGE: KASIR
-// ============================================================
-function PageKasir({ barang, penjualan, setBarang, setPenjualan, showNotif }) {
-  const [selected, setSelected] = React.useState(null);
-  const [qty, setQty] = React.useState(1);
-  const [saving, setSaving] = React.useState(false);
+// ══════════════════════════════════════════════════
+// PENITIP
+// ══════════════════════════════════════════════════
+function PgPenitip({penitip,barang,setPenitip,notif,loading}){
+  const [form,setForm] = React.useState({nama:'',kontak:''});
+  const [saving,setSaving] = React.useState(false);
 
-  const available = barang.filter(b => b.stok > 0);
-  const item = barang.find(b => b.id === selected);
-
-  const simpan = async () => {
-    if (!item || !qty || qty <= 0) return;
-    if (item.stok < qty) return showNotif(`Stok tidak cukup! Sisa: ${item.stok}`, 'error');
+  const tambah = async()=>{
+    if(!form.nama.trim()) return notif('Nama penitip wajib diisi','err');
     setSaving(true);
-    try {
-      const stokBaru = item.stok - qty;
-      const res = await api({ action: 'addPenjualan', idBarang: item.id, qty, stokBaru });
-      if (res.success) {
-        setBarang(prev => prev.map(b => b.id === item.id ? {...b, stok: stokBaru} : b));
-        setPenjualan(prev => [res.data, ...prev]);
-        setSelected(null); setQty(1);
-        showNotif(`Penjualan ${item.nama} x${qty} berhasil dicatat!`);
-      } else showNotif(res.error, 'error');
-    } catch { showNotif('Gagal terhubung ke server.', 'error'); }
+    try{
+      const r = await api({action:'addPenitip',nama:form.nama.trim(),kontak:form.kontak.trim()});
+      if(r.success){ setPenitip(p=>[...p,r.data]); setForm({nama:'',kontak:''}); notif('Penitip ditambahkan!'); }
+      else notif(r.error,'err');
+    } catch{ notif('Gagal terhubung','err'); }
+    setSaving(false);
+  };
+
+  const hapus = async id=>{
+    if(barang.some(b=>b.idPenitip===id)) return notif('Penitip masih punya barang!','err');
+    if(!confirm('Hapus penitip ini?')) return;
+    try{
+      const r = await api({action:'deletePenitip',id});
+      if(r.success){ setPenitip(p=>p.filter(x=>x.id!==id)); notif('Penitip dihapus'); }
+      else notif(r.error,'err');
+    } catch{ notif('Gagal terhubung','err'); }
+  };
+
+  return (
+    <div className="fade-up">
+      <div className="pg-head"><h2>👥 Penitip</h2><p>Kelola mitra penitip barang</p></div>
+
+      <div className="card" style={{marginBottom:'.9rem'}}>
+        <div className="card-title">Tambah Penitip Baru</div>
+        <div className="frow" style={{marginBottom:'.65rem'}}>
+          <div>
+            <label className="flabel">Nama *</label>
+            <input className="inp" placeholder="Nama penitip" value={form.nama} onChange={e=>setForm({...form,nama:e.target.value})}/>
+          </div>
+          <div>
+            <label className="flabel">No. HP / WA</label>
+            <input className="inp" placeholder="08xx…" value={form.kontak} onChange={e=>setForm({...form,kontak:e.target.value})} onKeyDown={e=>e.key==='Enter'&&tambah()}/>
+          </div>
+        </div>
+        <button className="btn btn-blue" onClick={tambah} disabled={saving}>
+          {saving?<><MiniSpin color="white"/>Menyimpan…</>:<><IC.Plus/>Tambah Penitip</>}
+        </button>
+      </div>
+
+      <div className="card">
+        <div className="card-title" style={{justifyContent:'space-between'}}>
+          <span>Daftar Mitra ({penitip.length})</span>
+          {loading&&<div className="loading-row"><MiniSpin/></div>}
+        </div>
+        {loading&&penitip.length===0 ? <SkeletonList/> :
+          penitip.length===0 ? <div className="empty"><div className="empty-icon">👥</div><p>Belum ada penitip</p><span>Tambah penitip pertama Anda</span></div>
+          : penitip.map(p=>(
+            <div key={p.id} className="list-row">
+              <div style={{display:'flex',alignItems:'center',gap:10}}>
+                <div style={{
+                  width:36,height:36,borderRadius:'50%',flexShrink:0,
+                  background:'linear-gradient(135deg,var(--indigo),var(--violet))',
+                  display:'flex',alignItems:'center',justifyContent:'center',
+                  color:'white',fontWeight:800,fontSize:'.8rem'
+                }}>{p.nama?.[0]?.toUpperCase()}</div>
+                <div>
+                  <div style={{fontWeight:600,fontSize:'.875rem'}}>{p.nama}</div>
+                  <div style={{fontSize:'.72rem',color:'var(--slate-400)',marginTop:2}}>{p.kontak||'Tidak ada kontak'}</div>
+                </div>
+              </div>
+              <button className="btn btn-icon btn-red" onClick={()=>hapus(p.id)}><IC.Trash/></button>
+            </div>
+          ))
+        }
+      </div>
+    </div>
+  );
+}
+
+// ══════════════════════════════════════════════════
+// BARANG
+// ══════════════════════════════════════════════════
+function PgBarang({penitip,barang,setBarang,notif,loading}){
+  const [form,setForm] = React.useState({idPenitip:'',nama:'',stok:'',hargaSetor:'',hargaJual:''});
+  const [saving,setSaving] = React.useState(false);
+
+  const tambah = async()=>{
+    if(!form.idPenitip||!form.nama||!form.hargaSetor||!form.hargaJual) return notif('Lengkapi semua field','err');
+    setSaving(true);
+    try{
+      const r = await api({action:'addBarang',...form,stok:parseInt(form.stok)||0,hargaSetor:parseInt(form.hargaSetor),hargaJual:parseInt(form.hargaJual)});
+      if(r.success){ setBarang(b=>[...b,r.data]); setForm({idPenitip:'',nama:'',stok:'',hargaSetor:'',hargaJual:''}); notif('Barang ditambahkan!'); }
+      else notif(r.error,'err');
+    } catch{ notif('Gagal terhubung','err'); }
+    setSaving(false);
+  };
+
+  const hapus = async id=>{
+    if(!confirm('Hapus barang ini?')) return;
+    try{
+      const r = await api({action:'deleteBarang',id});
+      if(r.success){ setBarang(b=>b.filter(x=>x.id!==id)); notif('Barang dihapus'); }
+      else notif(r.error,'err');
+    } catch{ notif('Gagal terhubung','err'); }
+  };
+
+  return (
+    <div className="fade-up">
+      <div className="pg-head"><h2>📦 Barang</h2><p>Terima dan kelola barang titipan</p></div>
+
+      <div className="card" style={{marginBottom:'.9rem'}}>
+        <div className="card-title">Terima Barang Titipan</div>
+        <div className="frow" style={{marginBottom:'.65rem'}}>
+          <div>
+            <label className="flabel">Penitip *</label>
+            <select className="inp" value={form.idPenitip} onChange={e=>setForm({...form,idPenitip:e.target.value})}>
+              <option value="">— Pilih Penitip —</option>
+              {penitip.map(p=><option key={p.id} value={p.id}>{p.nama}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className="flabel">Nama Barang *</label>
+            <input className="inp" placeholder="Cth: Nasi Uduk" value={form.nama} onChange={e=>setForm({...form,nama:e.target.value})}/>
+          </div>
+        </div>
+        <div className="frow-3" style={{marginBottom:'.65rem'}}>
+          <div>
+            <label className="flabel">Stok Awal</label>
+            <input className="inp" type="number" min="0" placeholder="0" value={form.stok} onChange={e=>setForm({...form,stok:e.target.value})}/>
+          </div>
+          <div>
+            <label className="flabel">Harga Setor</label>
+            <input className="inp" type="number" min="0" placeholder="Rp" value={form.hargaSetor} onChange={e=>setForm({...form,hargaSetor:e.target.value})}/>
+          </div>
+          <div>
+            <label className="flabel">Harga Jual</label>
+            <input className="inp" type="number" min="0" placeholder="Rp" value={form.hargaJual} onChange={e=>setForm({...form,hargaJual:e.target.value})}/>
+          </div>
+        </div>
+        <button className="btn btn-blue" onClick={tambah} disabled={saving}>
+          {saving?<><MiniSpin color="white"/>Menyimpan…</>:<><IC.Plus/>Tambah Barang</>}
+        </button>
+      </div>
+
+      {loading&&barang.length===0 ? <SkeletonCard/> :
+        barang.length===0 ? (
+          <div className="card"><div className="empty"><div className="empty-icon">📦</div><p>Belum ada barang</p><span>Tambah barang titipan di atas</span></div></div>
+        ) : (
+          <div className="barang-grid">
+            {barang.map(b=>{
+              const pemilik = penitip.find(p=>p.id===b.idPenitip);
+              const margin = b.hargaJual-b.hargaSetor;
+              const stokClass = b.stok>5?'badge-green':b.stok>0?'badge-orange':'badge-red';
+              return (
+                <div key={b.id} className="barang-card">
+                  <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:'.6rem'}}>
+                    <div style={{flex:1,minWidth:0,paddingRight:6}}>
+                      <div style={{fontWeight:700,fontSize:'.875rem',marginBottom:2}}>{b.nama}</div>
+                      <div style={{fontSize:'.7rem',color:'var(--slate-400)'}}>{pemilik?.nama||'—'}</div>
+                    </div>
+                    <span className={`badge ${stokClass}`}>{b.stok}</span>
+                  </div>
+                  <div style={{background:'var(--slate-50)',borderRadius:8,padding:'.55rem .7rem',marginBottom:'.65rem',display:'flex',justifyContent:'space-between'}}>
+                    <div>
+                      <div style={{fontSize:'.62rem',color:'var(--slate-400)',fontWeight:700}}>SETOR</div>
+                      <div style={{fontWeight:600,fontSize:'.8rem'}}>{formatRp(b.hargaSetor)}</div>
+                    </div>
+                    <div style={{textAlign:'right'}}>
+                      <div style={{fontSize:'.62rem',color:'var(--slate-400)',fontWeight:700}}>JUAL</div>
+                      <div style={{fontWeight:700,color:'var(--indigo)',fontSize:'.8rem'}}>{formatRp(b.hargaJual)}</div>
+                    </div>
+                  </div>
+                  <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+                    <span style={{fontSize:'.72rem',color:'var(--emerald)',fontWeight:700}}>+{formatRp(margin)}/pc</span>
+                    <button className="btn btn-icon btn-red" onClick={()=>hapus(b.id)}><IC.Trash/></button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )
+      }
+    </div>
+  );
+}
+
+// ══════════════════════════════════════════════════
+// KASIR
+// ══════════════════════════════════════════════════
+function PgKasir({barang,penjualan,setBarang,setPenjualan,notif}){
+  const [sel,setSel] = React.useState(null);
+  const [qty,setQty] = React.useState(1);
+  const [saving,setSaving] = React.useState(false);
+
+  const available = barang.filter(b=>b.stok>0);
+  const item = barang.find(b=>b.id===sel);
+
+  const simpan = async()=>{
+    if(!item||qty<=0) return;
+    if(item.stok<qty) return notif(`Stok kurang! Sisa: ${item.stok}`,'err');
+    setSaving(true);
+    try{
+      const stokBaru = item.stok-qty;
+      const r = await api({action:'addPenjualan',idBarang:item.id,qty,stokBaru});
+      if(r.success){
+        setBarang(b=>b.map(x=>x.id===item.id?{...x,stok:stokBaru}:x));
+        setPenjualan(p=>[r.data,...p]);
+        setSel(null); setQty(1);
+        notif(`${item.nama} ×${qty} — berhasil dicatat!`);
+      } else notif(r.error,'err');
+    } catch{ notif('Gagal terhubung','err'); }
     setSaving(false);
   };
 
   return (
-    <div className="animate-fade-in">
-      <div className="page-header"><h2>🛒 Kasir</h2><p>Catat penjualan barang titipan.</p></div>
+    <div className="fade-up">
+      <div className="pg-head"><h2>🛒 Kasir</h2><p>Catat penjualan barang titipan</p></div>
 
-      <div className="card" style={{marginBottom:'1.25rem'}}>
+      <div className="card" style={{marginBottom:'.9rem'}}>
         <div className="card-title">
-          <span style={{background:'#f0fdf4',color:'#15803d',width:24,height:24,borderRadius:999,display:'inline-flex',alignItems:'center',justifyContent:'center',fontSize:'.8rem',marginRight:8,fontWeight:700}}>1</span>
+          <span className="sec-badge" style={{background:'var(--emerald-mid)',color:'var(--emerald)'}}>1</span>
           Pilih Barang
         </div>
-        {available.length === 0 ? (
-          <div className="empty-state" style={{padding:'1.5rem'}}><Icon.Package /><p>Semua stok habis</p></div>
+        {available.length===0 ? (
+          <div className="empty" style={{padding:'1.5rem'}}><div className="empty-icon">📦</div><p>Semua stok habis</p></div>
         ) : (
           <div className="kasir-grid">
-            {available.map(b => (
-              <button key={b.id} className={`kasir-item ${selected === b.id ? 'selected' : ''}`}
-                onClick={() => { setSelected(b.id); setQty(1); }}>
-                <div style={{fontWeight:700,fontSize:'.875rem',marginBottom:6,color: selected===b.id?'#065f46':'#1e293b'}}>{b.nama}</div>
-                <div style={{fontWeight:800,color:'#059669'}}>{formatRp(b.hargaJual)}</div>
-                <div style={{fontSize:'.7rem',color:'#94a3b8',marginTop:3,fontWeight:500}}>STOK: {b.stok}</div>
+            {available.map(b=>(
+              <button key={b.id} className={`kasir-tile ${sel===b.id?'sel':''}`}
+                onClick={()=>{ setSel(b.id); setQty(1); }}>
+                {sel===b.id&&<div style={{position:'absolute',top:6,right:6,width:8,height:8,borderRadius:'50%',background:'var(--emerald)'}}/>}
+                <div style={{fontWeight:700,fontSize:'.82rem',marginBottom:4,color:sel===b.id?'#065f46':'var(--slate-800)',lineHeight:1.3}}>{b.nama}</div>
+                <div style={{fontWeight:800,color:'var(--emerald)',fontSize:'.88rem'}}>{formatRp(b.hargaJual)}</div>
+                <div style={{fontSize:'.62rem',color:'var(--slate-400)',marginTop:3,fontWeight:600}}>STOK: {b.stok}</div>
               </button>
             ))}
           </div>
         )}
       </div>
 
-      {item && (
-        <div className="card animate-slide-down" style={{border:'2px solid #059669'}}>
-          <div style={{position:'absolute',top:0,right:0,background:'#059669',color:'white',padding:'.25rem .75rem',borderRadius:'0 14px 0 10px',fontSize:'.7rem',fontWeight:700}}>
-            TERPILIH
-          </div>
+      {item&&(
+        <div className="card pop-in" style={{border:'2px solid var(--emerald)',position:'relative'}}>
+          <div style={{
+            position:'absolute',top:0,right:0,
+            background:'linear-gradient(135deg,var(--emerald),#047857)',
+            color:'white',padding:'.22rem .7rem',
+            borderRadius:'0 16px 0 10px',
+            fontSize:'.63rem',fontWeight:800,letterSpacing:.05
+          }}>TERPILIH</div>
           <div className="card-title">
-            <span style={{background:'#f0fdf4',color:'#15803d',width:24,height:24,borderRadius:999,display:'inline-flex',alignItems:'center',justifyContent:'center',fontSize:'.8rem',marginRight:8,fontWeight:700}}>2</span>
+            <span className="sec-badge" style={{background:'var(--emerald-mid)',color:'var(--emerald)'}}>2</span>
             Atur Jumlah &amp; Simpan
           </div>
-          <div style={{background:'#f8fafc',borderRadius:10,padding:'.85rem',display:'flex',justifyContent:'space-between',marginBottom:'1rem'}}>
-            <div><div style={{fontSize:'.7rem',color:'#94a3b8',marginBottom:2}}>BARANG</div><div style={{fontWeight:700}}>{item.nama}</div></div>
-            <div style={{textAlign:'right'}}><div style={{fontSize:'.7rem',color:'#94a3b8',marginBottom:2}}>HARGA</div><div style={{fontWeight:700,color:'#059669'}}>{formatRp(item.hargaJual)}</div></div>
-          </div>
-          <div style={{marginBottom:'1rem'}}>
-            <div style={{fontSize:'.8rem',fontWeight:600,color:'#475569',marginBottom:8}}>Jumlah Laku (maks. {item.stok})</div>
-            <div className="qty-control">
-              <button className="qty-btn" onClick={() => setQty(q => Math.max(1, q - 1))}>−</button>
-              <input className="qty-input" type="number" min="1" max={item.stok} value={qty}
-                onChange={e => { let v=parseInt(e.target.value)||1; if(v>item.stok) v=item.stok; setQty(v); }} />
-              <button className="qty-btn" onClick={() => setQty(q => Math.min(item.stok, q + 1))}>+</button>
+          <div style={{background:'var(--slate-50)',borderRadius:10,padding:'.85rem',display:'flex',justifyContent:'space-between',marginBottom:'.9rem'}}>
+            <div>
+              <div style={{fontSize:'.63rem',color:'var(--slate-400)',fontWeight:700,marginBottom:2}}>BARANG</div>
+              <div style={{fontWeight:700}}>{item.nama}</div>
+            </div>
+            <div style={{textAlign:'right'}}>
+              <div style={{fontSize:'.63rem',color:'var(--slate-400)',fontWeight:700,marginBottom:2}}>HARGA</div>
+              <div style={{fontWeight:700,color:'var(--emerald)'}}>{formatRp(item.hargaJual)}</div>
             </div>
           </div>
-          <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',borderTop:'1px solid #f1f5f9',paddingTop:'1rem',marginBottom:'1rem'}}>
-            <span style={{fontWeight:700,color:'#475569'}}>Total:</span>
-            <span style={{fontWeight:800,fontSize:'1.4rem',color:'#059669'}}>{formatRp(item.hargaJual * qty)}</span>
+          <label className="flabel" style={{marginBottom:'.5rem'}}>Jumlah (maks. {item.stok})</label>
+          <div className="qty-wrap" style={{marginBottom:'.9rem'}}>
+            <button className="qty-btn" onClick={()=>setQty(q=>Math.max(1,q-1))}>−</button>
+            <input className="qty-num" type="number" min="1" max={item.stok} value={qty}
+              onChange={e=>{ let v=parseInt(e.target.value)||1; if(v>item.stok) v=item.stok; setQty(v); }}/>
+            <button className="qty-btn" onClick={()=>setQty(q=>Math.min(item.stok,q+1))}>+</button>
           </div>
-          <button className="btn btn-green" style={{width:'100%',padding:'.9rem',fontSize:'1rem',justifyContent:'center'}} onClick={simpan} disabled={saving}>
-            <Icon.Check />{saving ? 'Menyimpan...' : 'Simpan Penjualan'}
+          <hr className="divider"/>
+          <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'.9rem'}}>
+            <span style={{fontWeight:600,color:'var(--slate-600)'}}>Total Bayar</span>
+            <span style={{fontWeight:800,fontSize:'1.35rem',color:'var(--emerald)',letterSpacing:'-.02em'}}>{formatRp(item.hargaJual*qty)}</span>
+          </div>
+          <button className="btn btn-green btn-full" onClick={simpan} disabled={saving}>
+            {saving?<><MiniSpin color="white"/>Menyimpan…</>:<><IC.Check/>Simpan Penjualan</>}
           </button>
         </div>
       )}
@@ -881,53 +1291,58 @@ function PageKasir({ barang, penjualan, setBarang, setPenjualan, showNotif }) {
   );
 }
 
-// ============================================================
-// PAGE: SETORAN
-// ============================================================
-function PageSetoran({ penitip, barang, penjualan }) {
-  const hitungSetoran = (idPenitip) =>
-    penjualan.reduce((t, p) => {
-      const b = barang.find(x => x.id === p.idBarang);
-      return t + (b && b.idPenitip === idPenitip ? b.hargaSetor * p.qty : 0);
-    }, 0);
+// ══════════════════════════════════════════════════
+// SETORAN
+// ══════════════════════════════════════════════════
+function PgSetoran({penitip,barang,penjualan,loading}){
+  const hitungSetoran = id => penjualan.reduce((t,p)=>{
+    const b=barang.find(x=>x.id===p.idBarang);
+    return t+(b&&b.idPenitip===id?b.hargaSetor*p.qty:0);
+  },0);
 
-  const penitipDenganSetoran = penitip.filter(p => hitungSetoran(p.id) > 0);
+  const aktif = penitip.filter(p=>hitungSetoran(p.id)>0);
 
   return (
-    <div className="animate-fade-in">
-      <div className="page-header"><h2>💰 Setoran</h2><p>Uang yang harus Anda bayarkan ke penitip.</p></div>
+    <div className="fade-up">
+      <div className="pg-head"><h2>💰 Setoran</h2><p>Tagihan yang harus dibayarkan ke penitip</p></div>
 
-      {penitipDenganSetoran.length === 0 ? (
-        <div className="card"><div className="empty-state"><Icon.Wallet /><p>Belum ada tagihan setoran</p><span>Catat penjualan di Kasir agar laporan ini terisi</span></div></div>
-      ) : penitipDenganSetoran.map(p => {
-        const totalSetor = hitungSetoran(p.id);
-        const detailLaku = penjualan.filter(j => { const b = barang.find(x => x.id === j.idBarang); return b && b.idPenitip === p.id; });
-        const summary = {};
-        detailLaku.forEach(j => {
-          const b = barang.find(x => x.id === j.idBarang);
-          if (!b) return;
-          if (!summary[b.id]) summary[b.id] = { nama: b.nama, qty: 0, hargaSetor: b.hargaSetor };
-          summary[b.id].qty += j.qty;
-        });
-
+      {loading&&aktif.length===0 ? (
+        <div className="card">
+          {[1,2].map(i=><div key={i} className="skeleton skel-block" style={{marginBottom:'.65rem'}}/>)}
+        </div>
+      ) : aktif.length===0 ? (
+        <div className="card"><div className="empty"><div className="empty-icon">💰</div><p>Belum ada tagihan</p><span>Catat penjualan di Kasir agar laporan ini terisi</span></div></div>
+      ) : aktif.map(p=>{
+        const total = hitungSetoran(p.id);
+        const detail = penjualan.filter(j=>{ const b=barang.find(x=>x.id===j.idBarang); return b&&b.idPenitip===p.id; });
+        const sum = {};
+        detail.forEach(j=>{ const b=barang.find(x=>x.id===j.idBarang); if(!b) return; if(!sum[b.id]) sum[b.id]={nama:b.nama,qty:0,hs:b.hargaSetor}; sum[b.id].qty+=j.qty; });
         return (
-          <div key={p.id} className="setoran-card">
-            <div className="setoran-header">
-              <div>
-                <div style={{fontWeight:700,fontSize:'1rem'}}>{p.nama}</div>
-                <div style={{fontSize:'.75rem',color:'#94a3b8',marginTop:2}}>{p.kontak || '-'}</div>
+          <div key={p.id} className="setor-card">
+            <div className="setor-head">
+              <div style={{display:'flex',alignItems:'center',gap:10}}>
+                <div style={{
+                  width:36,height:36,borderRadius:'50%',flexShrink:0,
+                  background:'linear-gradient(135deg,var(--indigo),var(--violet))',
+                  display:'flex',alignItems:'center',justifyContent:'center',
+                  color:'white',fontWeight:800,fontSize:'.8rem'
+                }}>{p.nama?.[0]?.toUpperCase()}</div>
+                <div>
+                  <div style={{fontWeight:700,color:'var(--slate-800)'}}>{p.nama}</div>
+                  <div style={{fontSize:'.72rem',color:'var(--slate-400)',marginTop:2}}>{p.kontak||'—'}</div>
+                </div>
               </div>
               <div style={{textAlign:'right'}}>
-                <div style={{fontSize:'.7rem',color:'#94a3b8',marginBottom:2}}>WAJIB SETOR</div>
-                <div style={{fontWeight:800,fontSize:'1.25rem',color:'#2563eb'}}>{formatRp(totalSetor)}</div>
+                <div style={{fontSize:'.6rem',color:'var(--slate-400)',fontWeight:700,marginBottom:3}}>WAJIB SETOR</div>
+                <div style={{fontWeight:800,fontSize:'1.15rem',color:'var(--indigo)'}}>{formatRp(total)}</div>
               </div>
             </div>
-            <div className="setoran-body">
-              <div style={{fontSize:'.7rem',color:'#94a3b8',fontWeight:700,textTransform:'uppercase',marginBottom:8}}>Rincian Barang Laku</div>
-              {Object.values(summary).map((item, i) => (
-                <div key={i} className="setoran-row">
-                  <span style={{color:'#475569'}}>{item.nama} <span style={{color:'#94a3b8'}}>×{item.qty}</span></span>
-                  <span style={{fontWeight:600}}>{formatRp(item.qty * item.hargaSetor)}</span>
+            <div className="setor-body">
+              <div style={{fontSize:'.63rem',color:'var(--slate-400)',fontWeight:700,textTransform:'uppercase',marginBottom:8,letterSpacing:'.06em'}}>Rincian</div>
+              {Object.values(sum).map((x,i)=>(
+                <div key={i} className="setor-row">
+                  <span style={{color:'var(--slate-600)'}}>{x.nama} <span style={{color:'var(--slate-300)'}}>×{x.qty}</span></span>
+                  <span style={{fontWeight:700,color:'var(--slate-700)'}}>{formatRp(x.qty*x.hs)}</span>
                 </div>
               ))}
             </div>
@@ -938,10 +1353,29 @@ function PageSetoran({ penitip, barang, penjualan }) {
   );
 }
 
-// ============================================================
-// RENDER
-// ============================================================
-ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+// ── RENDER ──────────────────────────────────────────────────────
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+
+// ── SERVICE WORKER (PWA offline support) ────────────────────────
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>{
+    const sw = `
+self.addEventListener('install',e=>{ self.skipWaiting(); });
+self.addEventListener('activate',e=>{ e.waitUntil(clients.claim()); });
+self.addEventListener('fetch',e=>{
+  if(e.request.method!=='GET') return;
+  if(e.request.url.includes('googleapis') || e.request.url.includes('cdnjs') || e.request.url.includes('script.google')) return;
+  e.respondWith(
+    caches.open('titipku-v1').then(c=>
+      c.match(e.request).then(r=>r||fetch(e.request).then(res=>{ c.put(e.request,res.clone()); return res; }))
+    )
+  );
+});`;
+    const blob = new Blob([sw],{type:'application/javascript'});
+    const url = URL.createObjectURL(blob);
+    navigator.serviceWorker.register(url).catch(()=>{});
+  });
+}
 </script>
 </body>
 </html>
