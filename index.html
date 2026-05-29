@@ -684,6 +684,32 @@ select.inp{cursor:pointer}
 }
 .btn-export svg{width:12px;height:12px}
 .btn-export:hover{background:var(--emerald-mid)}
+
+/* ── Kasir cart ─────────────────────────────────── */
+.cart-item{
+  display:flex;align-items:center;gap:8px;
+  padding:.6rem 0;border-bottom:1px solid var(--slate-100);
+}
+.cart-item:last-child{border-bottom:none}
+.cart-item-info{flex:1;min-width:0}
+.cart-item-name{font-size:.8rem;font-weight:700;color:var(--slate-800);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cart-item-price{font-size:.7rem;color:var(--slate-400);margin-top:1px}
+.cart-qty{
+  display:flex;align-items:center;gap:4px;flex-shrink:0;
+}
+.cart-qty-btn{
+  width:24px;height:24px;border-radius:6px;
+  background:var(--slate-100);color:var(--slate-600);
+  display:flex;align-items:center;justify-content:center;
+  font-size:.85rem;font-weight:700;transition:background .1s;
+}
+.cart-qty-btn:hover{background:var(--slate-200)}
+.cart-qty-btn.del{background:var(--rose-light);color:var(--rose)}
+.cart-qty-num{
+  width:28px;text-align:center;font-size:.82rem;font-weight:700;
+  color:var(--slate-900);border:none;background:transparent;
+}
+.cart-subtotal{font-size:.78rem;font-weight:800;color:var(--emerald);min-width:52px;text-align:right;flex-shrink:0}
 </style>
 </head>
 <body>
@@ -1006,7 +1032,7 @@ function PgBeranda({penitip,barang,penjualan,user,loading}){
 
       <div className="hero-card">
         <div className="hero-label">Performa Bisnis</div>
-        <div className="hero-title">Data real-time dari Spreadsheet</div>
+        <!-- <div className="hero-title">Data real-time dari Spreadsheet</div> -->
         <div className="hero-grid">
           <div className="hero-stat">
             <div className="hero-stat-l">Keuntungan</div>
@@ -1391,17 +1417,17 @@ function PgBarang({penitip,barang,setBarang,notif,loading}){
             <div className="frow-3">
               <div className="fgrp">
                 <label className="flabel">Stok Awal</label>
-                <input className="inp" type="number" min="0" placeholder="0" value={form.stok}
+                <input className="inp" type="number" inputMode="numeric" pattern="[0-9]*" min="0" placeholder="0" value={form.stok}
                   onChange={e=>setForm({...form,stok:e.target.value})}/>
               </div>
               <div className="fgrp">
                 <label className="flabel">Harga Setor</label>
-                <input className="inp" type="number" min="0" placeholder="Rp" value={form.hargaSetor}
+                <input className="inp" type="number" inputMode="numeric" pattern="[0-9]*" min="0" placeholder="Rp" value={form.hargaSetor}
                   onChange={e=>setForm({...form,hargaSetor:e.target.value})}/>
               </div>
               <div className="fgrp">
                 <label className="flabel">Harga Jual</label>
-                <input className="inp" type="number" min="0" placeholder="Rp" value={form.hargaJual}
+                <input className="inp" type="number" inputMode="numeric" pattern="[0-9]*" min="0" placeholder="Rp" value={form.hargaJual}
                   onChange={e=>setForm({...form,hargaJual:e.target.value})}/>
               </div>
             </div>
@@ -1419,26 +1445,67 @@ function PgBarang({penitip,barang,setBarang,notif,loading}){
 // KASIR
 // ══════════════════════════════════════════════════
 function PgKasir({barang,penjualan,setBarang,setPenjualan,notif}){
-  const [sel,setSel] = React.useState(null);
-  const [qty,setQty] = React.useState(1);
+  const [cart,setCart] = React.useState({}); // {idBarang: qty}
   const [saving,setSaving] = React.useState(false);
 
   const available = barang.filter(b=>b.stok>0);
-  const item = barang.find(b=>b.id===sel);
+
+  // Tambah/toggle item ke cart
+  const toggleItem = (id)=>{
+    setCart(c=>{
+      if(c[id]) {
+        const n={...c}; delete n[id]; return n;
+      }
+      return {...c,[id]:1};
+    });
+  };
+
+  // Ubah qty item di cart
+  const setQty = (id, val)=>{
+    const b = barang.find(x=>x.id===id);
+    if(!b) return;
+    const v = Math.min(Math.max(1, parseInt(val)||1), b.stok);
+    setCart(c=>({...c,[id]:v}));
+  };
+
+  // Hapus dari cart
+  const removeItem = (id)=>setCart(c=>{ const n={...c}; delete n[id]; return n; });
+
+  const cartItems = Object.entries(cart)
+    .map(([id,qty])=>({ b: barang.find(x=>x.id===id), qty }))
+    .filter(x=>x.b);
+
+  const totalBayar = cartItems.reduce((t,{b,qty})=>t+b.hargaJual*qty, 0);
+  const totalItems = cartItems.reduce((t,{qty})=>t+qty, 0);
 
   const simpan = async()=>{
-    if(!item||qty<=0) return;
-    if(item.stok<qty) return notif(`Stok kurang! Sisa: ${item.stok}`,'err');
+    if(cartItems.length===0) return notif('Pilih barang dulu','err');
+    // Validasi stok semua item
+    for(const {b,qty} of cartItems){
+      if(b.stok<qty) return notif(`Stok ${b.nama} kurang! Sisa: ${b.stok}`,'err');
+    }
     setSaving(true);
     try{
-      const stokBaru = item.stok-qty;
-      const r = await api({action:'addPenjualan',idBarang:item.id,qty,stokBaru});
-      if(r.success){
-        setBarang(b=>b.map(x=>x.id===item.id?{...x,stok:stokBaru}:x));
-        setPenjualan(p=>[r.data,...p]);
-        setSel(null); setQty(1);
-        notif(`${item.nama} ×${qty} — berhasil dicatat!`);
-      } else notif(r.error,'err');
+      // Kirim satu per satu secara paralel
+      const results = await Promise.all(cartItems.map(({b,qty})=>
+        api({action:'addPenjualan',idBarang:b.id,qty,stokBaru:b.stok-qty})
+      ));
+      const allOk = results.every(r=>r.success);
+      if(allOk){
+        // Update stok lokal
+        setBarang(br=>br.map(x=>{
+          const entry = cartItems.find(ci=>ci.b.id===x.id);
+          return entry ? {...x,stok:x.stok-entry.qty} : x;
+        }));
+        // Tambah ke history penjualan
+        const newSales = results.map(r=>r.data).filter(Boolean);
+        setPenjualan(p=>[...newSales,...p]);
+        setCart({});
+        notif(`${totalItems} item berhasil dicatat!`);
+      } else {
+        const errMsg = results.find(r=>!r.success)?.error||'Sebagian gagal disimpan';
+        notif(errMsg,'err');
+      }
     } catch{ notif('Gagal terhubung','err'); }
     setSaving(false);
   };
@@ -1447,65 +1514,80 @@ function PgKasir({barang,penjualan,setBarang,setPenjualan,notif}){
     <div className="fade-up">
       <div className="pg-head"><h2>🛒 Kasir</h2><p>Catat penjualan barang titipan</p></div>
 
-      <div className="card" style={{marginBottom:'.9rem'}}>
+      {/* PILIH BARANG */}
+      <div className="card" style={{marginBottom:'.75rem'}}>
         <div className="card-title">
           <span className="sec-badge" style={{background:'var(--emerald-mid)',color:'var(--emerald)'}}>1</span>
           Pilih Barang
         </div>
         {available.length===0 ? (
-          <div className="empty" style={{padding:'1.5rem'}}><div className="empty-icon">📦</div><p>Semua stok habis</p></div>
+          <div className="empty" style={{padding:'1.25rem'}}><div className="empty-icon">📦</div><p>Semua stok habis</p></div>
         ) : (
           <div className="kasir-grid">
-            {available.map(b=>(
-              <button key={b.id} className={`kasir-tile ${sel===b.id?'sel':''}`}
-                onClick={()=>{ setSel(b.id); setQty(1); }}>
-                {sel===b.id&&<div style={{position:'absolute',top:6,right:6,width:8,height:8,borderRadius:'50%',background:'var(--emerald)'}}/>}
-                <div style={{fontWeight:700,fontSize:'.82rem',marginBottom:4,color:sel===b.id?'#065f46':'var(--slate-800)',lineHeight:1.3}}>{b.nama}</div>
-                <div style={{fontWeight:800,color:'var(--emerald)',fontSize:'.88rem'}}>{formatRp(b.hargaJual)}</div>
-                <div style={{fontSize:'.62rem',color:'var(--slate-400)',marginTop:3,fontWeight:600}}>STOK: {b.stok}</div>
-              </button>
-            ))}
+            {available.map(b=>{
+              const inCart = !!cart[b.id];
+              const cartQty = cart[b.id]||0;
+              return (
+                <button key={b.id} className={`kasir-tile ${inCart?'sel':''}`}
+                  onClick={()=>toggleItem(b.id)}>
+                  {inCart&&(
+                    <div style={{position:'absolute',top:5,right:5,
+                      background:'var(--emerald)',color:'white',
+                      borderRadius:'999px',fontSize:'.55rem',fontWeight:800,
+                      padding:'1px 6px',lineHeight:1.6}}>×{cartQty}</div>
+                  )}
+                  <div style={{fontWeight:700,fontSize:'.78rem',marginBottom:3,color:inCart?'#065f46':'var(--slate-800)',lineHeight:1.3,paddingRight:inCart?20:0}}>{b.nama}</div>
+                  <div style={{fontWeight:800,color:'var(--emerald)',fontSize:'.82rem'}}>{formatRp(b.hargaJual)}</div>
+                  <div style={{fontSize:'.6rem',color:'var(--slate-400)',marginTop:2,fontWeight:600}}>STOK: {b.stok}</div>
+                </button>
+              );
+            })}
           </div>
         )}
       </div>
 
-      {item&&(
-        <div className="card pop-in" style={{border:'2px solid var(--emerald)',position:'relative'}}>
-          <div style={{
-            position:'absolute',top:0,right:0,
-            background:'linear-gradient(135deg,var(--emerald),#047857)',
-            color:'white',padding:'.22rem .7rem',
-            borderRadius:'0 16px 0 10px',
-            fontSize:'.63rem',fontWeight:800,letterSpacing:.05
-          }}>TERPILIH</div>
-          <div className="card-title">
-            <span className="sec-badge" style={{background:'var(--emerald-mid)',color:'var(--emerald)'}}>2</span>
-            Atur Jumlah &amp; Simpan
+      {/* KERANJANG */}
+      {cartItems.length>0&&(
+        <div className="card pop-in" style={{border:'2px solid var(--emerald)'}}>
+          <div className="card-title" style={{justifyContent:'space-between'}}>
+            <div style={{display:'flex',alignItems:'center',gap:8}}>
+              <span className="sec-badge" style={{background:'var(--emerald-mid)',color:'var(--emerald)'}}>2</span>
+              Keranjang
+            </div>
+            <span style={{fontSize:'.7rem',color:'var(--slate-400)',fontWeight:600}}>{cartItems.length} item</span>
           </div>
-          <div style={{background:'var(--slate-50)',borderRadius:10,padding:'.85rem',display:'flex',justifyContent:'space-between',marginBottom:'.9rem'}}>
+
+          {cartItems.map(({b,qty})=>(
+            <div key={b.id} className="cart-item">
+              <div className="cart-item-info">
+                <div className="cart-item-name">{b.nama}</div>
+                <div className="cart-item-price">{formatRp(b.hargaJual)} / pcs · stok {b.stok}</div>
+              </div>
+              <div className="cart-qty">
+                <button className="cart-qty-btn" onClick={()=>qty>1?setQty(b.id,qty-1):removeItem(b.id)}>
+                  {qty>1?'−':<IC.Trash/>}
+                </button>
+                <input className="cart-qty-num" type="number" inputMode="numeric" pattern="[0-9]*"
+                  value={qty} onChange={e=>setQty(b.id,e.target.value)}/>
+                <button className="cart-qty-btn" onClick={()=>setQty(b.id,qty+1)} disabled={qty>=b.stok}>+</button>
+              </div>
+              <div className="cart-subtotal">{formatRp(b.hargaJual*qty)}</div>
+            </div>
+          ))}
+
+          <hr className="divider"/>
+          <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'.75rem'}}>
             <div>
-              <div style={{fontSize:'.63rem',color:'var(--slate-400)',fontWeight:700,marginBottom:2}}>BARANG</div>
-              <div style={{fontWeight:700}}>{item.nama}</div>
+              <div style={{fontSize:'.65rem',color:'var(--slate-400)',fontWeight:700}}>TOTAL BAYAR</div>
+              <div style={{fontWeight:800,fontSize:'1.2rem',color:'var(--emerald)',letterSpacing:'-.02em'}}>{formatRp(totalBayar)}</div>
             </div>
             <div style={{textAlign:'right'}}>
-              <div style={{fontSize:'.63rem',color:'var(--slate-400)',fontWeight:700,marginBottom:2}}>HARGA</div>
-              <div style={{fontWeight:700,color:'var(--emerald)'}}>{formatRp(item.hargaJual)}</div>
+              <div style={{fontSize:'.65rem',color:'var(--slate-400)',fontWeight:700}}>TOTAL ITEM</div>
+              <div style={{fontWeight:800,fontSize:'1.2rem',color:'var(--slate-700)'}}>{totalItems} pcs</div>
             </div>
           </div>
-          <label className="flabel" style={{marginBottom:'.5rem'}}>Jumlah (maks. {item.stok})</label>
-          <div className="qty-wrap" style={{marginBottom:'.9rem'}}>
-            <button className="qty-btn" onClick={()=>setQty(q=>Math.max(1,q-1))}>−</button>
-            <input className="qty-num" type="number" min="1" max={item.stok} value={qty}
-              onChange={e=>{ let v=parseInt(e.target.value)||1; if(v>item.stok) v=item.stok; setQty(v); }}/>
-            <button className="qty-btn" onClick={()=>setQty(q=>Math.min(item.stok,q+1))}>+</button>
-          </div>
-          <hr className="divider"/>
-          <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'.9rem'}}>
-            <span style={{fontWeight:600,color:'var(--slate-600)'}}>Total Bayar</span>
-            <span style={{fontWeight:800,fontSize:'1.35rem',color:'var(--emerald)',letterSpacing:'-.02em'}}>{formatRp(item.hargaJual*qty)}</span>
-          </div>
           <button className="btn btn-green btn-full" onClick={simpan} disabled={saving}>
-            {saving?<><MiniSpin color="white"/>Menyimpan…</>:<><IC.Check/>Simpan Penjualan</>}
+            {saving?<><MiniSpin color="white"/>Menyimpan…</>:<><IC.Check/>Simpan Penjualan ({cartItems.length} item)</>}
           </button>
         </div>
       )}
