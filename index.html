@@ -1446,97 +1446,208 @@ function PgBarang({penitip,barang,setBarang,notif,loading}){
 }
 
 // ══════════════════════════════════════════════════
-// KASIR
+// KASIR — MULTI-ITEM CART
 // ══════════════════════════════════════════════════
 function PgKasir({barang,penjualan,setBarang,setPenjualan,notif}){
-  const [sel,setSel] = React.useState(null);
-  const [qty,setQty] = React.useState(1);
+  const [cart,setCart] = React.useState([]);
+  const [tempQty,setTempQty] = React.useState({});
   const [saving,setSaving] = React.useState(false);
 
   const available = barang.filter(b=>b.stok>0);
-  const item = barang.find(b=>b.id===sel);
 
-  const simpan = async()=>{
-    if(!item||qty<=0) return;
-    if(item.stok<qty) return notif(`Stok kurang! Sisa: ${item.stok}`,'err');
+  // Tambah/update item ke cart
+  const addToCart = (barangId)=>{
+    const existingItem = cart.find(c=>c.idBarang===barangId);
+    if(existingItem){
+      // Jika sudah ada, increment qty
+      setCart(cart.map(c=>
+        c.idBarang===barangId
+          ? {...c,qty:Math.min(c.qty+1,barang.find(b=>b.id===barangId)?.stok||0)}
+          : c
+      ));
+    } else {
+      // Tambah item baru dengan qty 1
+      setCart([...cart,{idBarang:barangId,qty:1}]);
+    }
+  };
+
+  // Update qty untuk item tertentu
+  const updateQty = (barangId,newQty)=>{
+    const b = barang.find(x=>x.id===barangId);
+    if(!b) return;
+    if(newQty<=0){
+      removeFromCart(barangId);
+      return;
+    }
+    if(newQty>b.stok) newQty = b.stok;
+    setCart(cart.map(c=>c.idBarang===barangId?{...c,qty:newQty}:c));
+  };
+
+  // Hapus item dari cart
+  const removeFromCart = (barangId)=>{
+    setCart(cart.filter(c=>c.idBarang!==barangId));
+  };
+
+  // Hitung total harga
+  const totalPrice = cart.reduce((t,c)=>{
+    const b = barang.find(x=>x.id===c.idBarang);
+    return t+(b?b.hargaJual*c.qty:0);
+  },0);
+
+  // Simpan semua item dalam cart
+  const simpanSemua = async()=>{
+    if(cart.length===0) return notif('Keranjang kosong!','err');
+    
+    // Validasi stok
+    for(let c of cart){
+      const b = barang.find(x=>x.id===c.idBarang);
+      if(!b||b.stok<c.qty) return notif(`Stok ${b?.nama} kurang!`,'err');
+    }
+
     setSaving(true);
     try{
-      const stokBaru = item.stok-qty;
-      const r = await api({action:'addPenjualan',idBarang:item.id,qty,stokBaru});
-      if(r.success){
-        setBarang(b=>b.map(x=>x.id===item.id?{...x,stok:stokBaru}:x));
-        setPenjualan(p=>[r.data,...p]);
-        setSel(null); setQty(1);
-        notif(`${item.nama} ×${qty} — berhasil dicatat!`);
-      } else notif(r.error,'err');
-    } catch{ notif('Gagal terhubung','err'); }
+      const updates = [];
+      const newCart = [];
+      
+      // Proses setiap item dalam cart
+      for(let c of cart){
+        const b = barang.find(x=>x.id===c.idBarang);
+        const stokBaru = b.stok-c.qty;
+        const r = await api({action:'addPenjualan',idBarang:c.idBarang,qty:c.qty,stokBaru});
+        if(r.success){
+          updates.push({id:c.idBarang,stokBaru});
+          newCart.push(r.data);
+        } else {
+          throw new Error(r.error||'Gagal menyimpan item');
+        }
+      }
+
+      // Update barang stok
+      setBarang(b=>b.map(item=>{
+        const upd = updates.find(u=>u.id===item.id);
+        return upd?{...item,stok:upd.stokBaru}:item;
+      }));
+
+      // Update penjualan
+      setPenjualan(p=>[...newCart,...p]);
+      
+      // Clear cart
+      setCart([]);
+      setTempQty({});
+      
+      notif(`✅ ${newCart.length} item berhasil disimpan!`);
+    } catch(e){ 
+      notif(e.message||'Gagal menyimpan','err'); 
+    }
     setSaving(false);
   };
 
   return (
     <div className="fade-up">
-      <div className="pg-head"><h2>🛒 Kasir</h2><p>Catat penjualan barang titipan</p></div>
+      <div className="pg-head"><h2>🛒 Kasir</h2><p>Pilih barang & checkout</p></div>
 
+      {/* DAFTAR BARANG TERSEDIA */}
       <div className="card" style={{marginBottom:'.9rem'}}>
         <div className="card-title">
-          <span className="sec-badge" style={{background:'var(--emerald-mid)',color:'var(--emerald)'}}>1</span>
-          Pilih Barang
+          <span className="sec-badge" style={{background:'var(--indigo-mid)',color:'var(--indigo)'}}>1</span>
+          Pilih Barang (Bisa Lebih dari 1)
         </div>
         {available.length===0 ? (
           <div className="empty" style={{padding:'1.5rem'}}><div className="empty-icon">📦</div><p>Semua stok habis</p></div>
         ) : (
           <div className="kasir-grid">
-            {available.map(b=>(
-              <button key={b.id} className={`kasir-tile ${sel===b.id?'sel':''}`}
-                onClick={()=>{ setSel(b.id); setQty(1); }}>
-                {sel===b.id&&<div style={{position:'absolute',top:6,right:6,width:8,height:8,borderRadius:'50%',background:'var(--emerald)'}}/>}
-                <div style={{fontWeight:700,fontSize:'.82rem',marginBottom:4,color:sel===b.id?'#065f46':'var(--slate-800)',lineHeight:1.3}}>{b.nama}</div>
-                <div style={{fontWeight:800,color:'var(--emerald)',fontSize:'.88rem'}}>{formatRp(b.hargaJual)}</div>
-                <div style={{fontSize:'.62rem',color:'var(--slate-400)',marginTop:3,fontWeight:600}}>STOK: {b.stok}</div>
-              </button>
-            ))}
+            {available.map(b=>{
+              const inCart = cart.find(c=>c.idBarang===b.id);
+              return (
+                <button key={b.id} className={`kasir-tile ${inCart?'sel':''}`} onClick={()=>addToCart(b.id)}>
+                  {inCart&&<div style={{position:'absolute',top:6,right:6,width:16,height:16,borderRadius:'50%',background:'var(--emerald)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'.6rem',color:'white',fontWeight:800}}>{inCart.qty}</div>}
+                  <div style={{fontWeight:700,fontSize:'.82rem',marginBottom:4,color:inCart?'#065f46':'var(--slate-800)',lineHeight:1.3}}>{b.nama}</div>
+                  <div style={{fontWeight:800,color:'var(--emerald)',fontSize:'.88rem'}}>{formatRp(b.hargaJual)}</div>
+                  <div style={{fontSize:'.62rem',color:'var(--slate-400)',marginTop:3,fontWeight:600}}>STOK: {b.stok}</div>
+                </button>
+              );
+            })}
           </div>
         )}
       </div>
 
-      {item&&(
-        <div className="card pop-in" style={{border:'2px solid var(--emerald)',position:'relative'}}>
+      {/* KERANJANG BELANJA */}
+      {cart.length>0&&(
+        <div className="card pop-in" style={{border:'2px solid var(--indigo)',marginBottom:'.9rem'}}>
           <div style={{
             position:'absolute',top:0,right:0,
-            background:'linear-gradient(135deg,var(--emerald),#047857)',
+            background:'linear-gradient(135deg,var(--indigo),var(--indigo-dark))',
             color:'white',padding:'.22rem .7rem',
             borderRadius:'0 16px 0 10px',
             fontSize:'.63rem',fontWeight:800,letterSpacing:.05
-          }}>TERPILIH</div>
+          }}>KERANJANG</div>
           <div className="card-title">
-            <span className="sec-badge" style={{background:'var(--emerald-mid)',color:'var(--emerald)'}}>2</span>
-            Atur Jumlah &amp; Simpan
+            <span className="sec-badge" style={{background:'var(--indigo-mid)',color:'var(--indigo)'}}>2</span>
+            Item Terpilih ({cart.length})
           </div>
-          <div style={{background:'var(--slate-50)',borderRadius:10,padding:'.85rem',display:'flex',justifyContent:'space-between',marginBottom:'.9rem'}}>
-            <div>
-              <div style={{fontSize:'.63rem',color:'var(--slate-400)',fontWeight:700,marginBottom:2}}>BARANG</div>
-              <div style={{fontWeight:700}}>{item.nama}</div>
-            </div>
-            <div style={{textAlign:'right'}}>
-              <div style={{fontSize:'.63rem',color:'var(--slate-400)',fontWeight:700,marginBottom:2}}>HARGA</div>
-              <div style={{fontWeight:700,color:'var(--emerald)'}}>{formatRp(item.hargaJual)}</div>
-            </div>
+
+          {/* List item dalam cart */}
+          <div style={{marginBottom:'.85rem'}}>
+            {cart.map(c=>{
+              const b = barang.find(x=>x.id===c.idBarang);
+              if(!b) return null;
+              const lineTotal = b.hargaJual*c.qty;
+              return (
+                <div key={c.idBarang} style={{
+                  background:'var(--slate-50)',borderRadius:'var(--r-sm)',
+                  padding:'.75rem',marginBottom:'.65rem',
+                  display:'flex',justifyContent:'space-between',alignItems:'flex-start',gap:'.5rem'
+                }}>
+                  <div style={{flex:1,minWidth:0}}>
+                    <div style={{fontWeight:700,fontSize:'.82rem',marginBottom:'.25rem'}}>{b.nama}</div>
+                    <div style={{fontSize:'.7rem',color:'var(--slate-400)',marginBottom:'.4rem'}}>
+                      {formatRp(b.hargaJual)} × {c.qty} = <span style={{fontWeight:700,color:'var(--emerald)'}}>{formatRp(lineTotal)}</span>
+                    </div>
+                    {/* QTY CONTROL */}
+                    <div className="qty-wrap" style={{width:'fit-content'}}>
+                      <button className="qty-btn" onClick={()=>updateQty(c.idBarang,c.qty-1)}>−</button>
+                      <input className="qty-num" type="number" min="1" max={b.stok} value={c.qty}
+                        onChange={e=>updateQty(c.idBarang,parseInt(e.target.value)||1)}
+                        style={{width:'45px'}}/>
+                      <button className="qty-btn" onClick={()=>updateQty(c.idBarang,c.qty+1)}>+</button>
+                    </div>
+                  </div>
+                  <button className="btn btn-icon btn-red" style={{width:28,height:28,marginTop:2}} onClick={()=>removeFromCart(c.idBarang)}><IC.Trash/></button>
+                </div>
+              );
+            })}
           </div>
-          <label className="flabel" style={{marginBottom:'.5rem'}}>Jumlah (maks. {item.stok})</label>
-          <div className="qty-wrap" style={{marginBottom:'.9rem'}}>
-            <button className="qty-btn" onClick={()=>setQty(q=>Math.max(1,q-1))}>−</button>
-            <input className="qty-num" type="number" min="1" max={item.stok} value={qty}
-              onChange={e=>{ let v=parseInt(e.target.value)||1; if(v>item.stok) v=item.stok; setQty(v); }}/>
-            <button className="qty-btn" onClick={()=>setQty(q=>Math.min(item.stok,q+1))}>+</button>
-          </div>
+
           <hr className="divider"/>
-          <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'.9rem'}}>
-            <span style={{fontWeight:600,color:'var(--slate-600)'}}>Total Bayar</span>
-            <span style={{fontWeight:800,fontSize:'1.35rem',color:'var(--emerald)',letterSpacing:'-.02em'}}>{formatRp(item.hargaJual*qty)}</span>
+
+          {/* TOTAL & CHECKOUT */}
+          <div style={{marginBottom:'.9rem'}}>
+            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'.6rem'}}>
+              <span style={{fontWeight:600,color:'var(--slate-600)'}}>Subtotal</span>
+              <span style={{fontWeight:700,fontSize:'.95rem'}}>{formatRp(totalPrice)}</span>
+            </div>
+            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+              <span style={{fontWeight:700,fontSize:'.9rem',color:'var(--slate-800)'}}>💰 Total Bayar</span>
+              <span style={{fontWeight:800,fontSize:'1.4rem',color:'var(--indigo)',letterSpacing:'-.02em'}}>{formatRp(totalPrice)}</span>
+            </div>
           </div>
-          <button className="btn btn-green btn-full" onClick={simpan} disabled={saving}>
-            {saving?<><MiniSpin color="white"/>Menyimpan…</>:<><IC.Check/>Simpan Penjualan</>}
-          </button>
+
+          <div style={{display:'flex',gap:'.6rem'}}>
+            <button className="btn btn-full" style={{background:'var(--slate-100)',color:'var(--slate-600)',flex:1}} onClick={()=>setCart([])} disabled={saving}>
+              🗑️ Batal
+            </button>
+            <button className="btn btn-green btn-full" style={{flex:2}} onClick={simpanSemua} disabled={saving}>
+              {saving?<><MiniSpin color="white"/>Checkout…</>:<><IC.Check/>Checkout Sekarang</>}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {cart.length===0&&(
+        <div className="card" style={{textAlign:'center',padding:'2rem 1rem',background:'linear-gradient(135deg,var(--indigo-light),var(--violet-light))'}}>
+          <div style={{fontSize:'2rem',marginBottom:'.5rem'}}>🛒</div>
+          <div style={{fontWeight:700,color:'var(--indigo)'}}>Keranjang Kosong</div>
+          <div style={{fontSize:'.8rem',color:'var(--slate-500)',marginTop:'.3rem'}}>Pilih barang untuk mulai checkout</div>
         </div>
       )}
     </div>
